@@ -1,7 +1,7 @@
 from typing import Any
 import os
 
-from pypath_common import data
+from . import _data
 
 __all__ = [
     'Descriptor',
@@ -20,13 +20,13 @@ class Descriptor():
         self._param.update(kwargs)
         fname = url_fname or self.param('fname')
 
-        if os.path.exists(fname):
+        if fname and os.path.exists(fname):
 
             self.from_file(fname = fname)
 
         else:
 
-            self._param['url'] = url_fname
+            self._param['url'] = self.url or url_fname
 
         if not self.url:
 
@@ -34,7 +34,8 @@ class Descriptor():
 
 
     def from_file(self, fname: str):
-        self._param.update(data.load(fname))
+
+        self._param.update(_data._module_data(fname))
 
 
     def param(self, key: str) -> Any:
