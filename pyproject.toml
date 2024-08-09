@@ -31,6 +31,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.9"
 toml = "*"
+cachemanager = { git = "https://github.com/saezlab/cache-manager.git", branch = "main" }
 
 [tool.poetry.dev-dependencies]
 pytest = ">=6.0"
