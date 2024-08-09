@@ -58,11 +58,13 @@ class CurlDownloader(AbstractDownloader):
         ]
 
         for param in params:
-            self.handler.setopt(
-                getattr(self.handler, param.upper()),
-                getattr(self.desc, param),
-            )
 
+            if (value := self.desc.param(param)) is not None:
+
+                self.handler.setopt(
+                    getattr(self.handler, param.upper()),
+                    value,
+                )
 
         if not self.http2:
 
