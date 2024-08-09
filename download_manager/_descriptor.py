@@ -1,6 +1,11 @@
-
 from typing import Any
 import os
+
+from pypath_common import data
+
+__all__ = [
+    'Descriptor',
+]
 
 
 class Descriptor():
@@ -11,11 +16,11 @@ class Descriptor():
     def __init__(self, *args, **kwargs):
         self._param = dict()
 
-        url_fname, *_ = args + [None]
+        url_fname, *_ = list(args) + [None]
         self._param.update(kwargs)
         fname = url_fname or self.param('fname')
 
-        if os.path.exist(fname):
+        if os.path.exists(fname):
 
             self.from_file(fname = fname)
 
@@ -29,7 +34,7 @@ class Descriptor():
 
 
     def from_file(self, fname: str):
-        pass
+        self._param.update(data.load(fname))
 
 
     def param(self, key: str) -> Any:
