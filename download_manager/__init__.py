@@ -26,3 +26,4 @@ from . import _data
 from ._session import log, _log, session
 from ._metadata import __author__, __version__
 from ._descriptor import Descriptor
+from ._downloader import *
