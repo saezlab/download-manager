@@ -22,4 +22,6 @@ __all__ = [
     '__author__',
 ]
 
+from . import _data
+from ._session import log, _log, session
 from ._metadata import __author__, __version__
