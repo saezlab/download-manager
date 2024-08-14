@@ -4,7 +4,7 @@ import abc
 
 import pycurl
 
-from . import _data, _descriptor
+from . import _data, _descriptor, _curlopt
 
 __all__ = [
     'AbstractDownloader',
@@ -41,7 +41,6 @@ class CurlDownloader(AbstractDownloader):
     def download(self):
         pass
 
-
     def setup(self):
 
         self.handler = pycurl.Curl()
@@ -55,6 +54,8 @@ class CurlDownloader(AbstractDownloader):
             'tcp_keepalive',
             'tcp_keepidle',
             'ssl_enable_alpn',
+            'http_version',
+            'ignore_content_length'
         ]
 
         for param in params:
@@ -63,20 +64,8 @@ class CurlDownloader(AbstractDownloader):
 
                 self.handler.setopt(
                     getattr(self.handler, param.upper()),
-                    value,
+                    _curlopt.process(value),
                 )
-
-        if not self.http2:
-
-            self.handler.setopt(
-                self.handler.HTTP_VERSION,
-                pycurl.CURL_HTTP_VERSION_1_1,
-            )
-
-        if self.ignore_content_length:
-
-            self.handler.setopt(self.handler.IGNORE_CONTENT_LENGTH, 136)
-
 
 class RequestsDownloader(AbstractDownloader):
     """
