@@ -1,7 +1,14 @@
+from typing import Any
 import re
 
 import pycurl
-from typing import Any
+
+__all__ = [
+    'SYNONYMS',
+    'ensure_int',
+    'http_version',
+    'process',
+]
 
 
 SYNONYMS = {}
@@ -28,11 +35,12 @@ def ensure_int(value: Any) -> int | None:
 
         return int(value)
 
-    value = value.upper()
-
     for n in (value, f'CURL_{value}'):
-        if (curl_int := getattr(pycurl, n, None)) is not None:
+        if (curl_int := getattr(pycurl, n.upper(), None)) is not None:
             return curl_int
+
+    if isinstance(value, str):
+        return value.encode('utf-8')
 
     return None
 

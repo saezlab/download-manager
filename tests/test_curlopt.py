@@ -12,6 +12,8 @@ examples = [
     ('http_version', None, pycurl.CURL_HTTP_VERSION_NONE),
     ('http_version', 'http_version_2TLS', pycurl.CURL_HTTP_VERSION_2TLS),
     ('http_version', 1.1, pycurl.CURL_HTTP_VERSION_1_1),
+    ('url', 'https://www.google.com', b'https://www.google.com'),
+    ('followlocation', True, 1),
 ]
 
 
