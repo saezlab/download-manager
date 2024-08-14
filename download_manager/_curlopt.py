@@ -4,13 +4,30 @@ import pycurl
 
 
 SYNONYMS = {
-        'http_version': {
-            'http_version_1_1': 1,
-        }
-    }
+}
+
+
+def process(key: str, value: Any) -> Any:
+
+    if (proc := SYNONYMS.get(key, globals().get(key, None))):
+
+        if isinstance(proc, dict):
+
+            value = proc.get(value, value)
+
+        elif callable(proc):
+
+            value = proc(value)
+
+    return name_to_int(value)
 
 
 def name_to_int(name: str) -> int | None:
+
+
+    if isinstance(name, int):
+
+        return name
 
     name = name.upper()
 
@@ -20,11 +37,13 @@ def name_to_int(name: str) -> int | None:
 
     return None
 
-def version_to_int(ver: str):
+
+def http_version(ver: str):
+
     ver = str(ver)
-    
+
     if not re.match(r'^(?:curl_)?http_version', ver, re.IGNORECASE):
         ver = ver.replace('.', '_')
         ver = f'curl_http_version_{ver}'
-    
-    return name_to_int(ver)
+
+    return ver
