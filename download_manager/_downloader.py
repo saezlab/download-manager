@@ -17,9 +17,20 @@ class AbstractDownloader(abc.ABC):
     Single download manager
     """
 
-    def __init__(self, desc: _descriptor.Descriptor):
+    def __init__(
+            self,
+            desc: _descriptor.Descriptor,
+            destination: str | None,
+        ):
         super().__init__()
         self.desc = desc
+        self.set_destination(destination)
+
+
+    def set_destination(self, destination: str | None):
+
+        self.desc['destination'] = destination or self.param('destination')
+
 
     @abc.abstractmethod
     def download(self) -> None:
@@ -66,6 +77,8 @@ class CurlDownloader(AbstractDownloader):
                     getattr(self.handler, param.upper()),
                     _curlopt.process(value),
                 )
+
+    def set_path(self)
 
 class RequestsDownloader(AbstractDownloader):
     """
