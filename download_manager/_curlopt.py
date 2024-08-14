@@ -19,21 +19,20 @@ def process(key: str, value: Any) -> Any:
 
             value = proc(value)
 
-    return name_to_int(value)
+    return ensure_int(value)
 
 
-def name_to_int(name: str) -> int | None:
+def ensure_int(value: Any) -> int | None:
 
+    if isinstance(value, (int, bool)):
 
-    if isinstance(name, int):
+        return int(value)
 
-        return name
+    value = value.upper()
 
-    name = name.upper()
-
-    for n in (name, f'CURL_{name}'):
-        if (value := getattr(pycurl, n, None)) is not None:
-            return value
+    for n in (value, f'CURL_{value}'):
+        if (curl_int := getattr(pycurl, n, None)) is not None:
+            return curl_int
 
     return None
 

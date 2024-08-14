@@ -14,6 +14,7 @@ examples = [
     ('http_version', 1.1, pycurl.CURL_HTTP_VERSION_1_1),
 ]
 
+
 def test_process():
     for head, var, res in examples:
         assert co.process(head, var) == res
