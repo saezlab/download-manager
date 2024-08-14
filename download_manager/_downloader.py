@@ -1,10 +1,11 @@
 from typing import Any
+import io
 import os
 import abc
 
 import pycurl
 
-from . import _data, _descriptor, _curlopt
+from . import _data, _curlopt, _descriptor
 
 __all__ = [
     'AbstractDownloader',
@@ -21,7 +22,7 @@ class AbstractDownloader(abc.ABC):
             self,
             desc: _descriptor.Descriptor,
             destination: str | None,
-        ):
+    ):
         super().__init__()
         self.desc = desc
         self.set_destination(destination)
@@ -31,6 +32,12 @@ class AbstractDownloader(abc.ABC):
 
         self.desc['destination'] = destination or self.param('destination')
 
+    def open_dest(self):
+        if dest := self.param('destination'):
+            self.destination = open(dest, 'wb')
+
+        else:
+            self.destination = io.BytesIO()
 
     @abc.abstractmethod
     def download(self) -> None:
@@ -66,7 +73,7 @@ class CurlDownloader(AbstractDownloader):
             'tcp_keepidle',
             'ssl_enable_alpn',
             'http_version',
-            'ignore_content_length'
+            'ignore_content_length',
         ]
 
         for param in params:
@@ -78,7 +85,8 @@ class CurlDownloader(AbstractDownloader):
                     _curlopt.process(value),
                 )
 
-    def set_path(self)
+    def set_path(self):
+        pass
 
 class RequestsDownloader(AbstractDownloader):
     """
