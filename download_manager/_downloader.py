@@ -1,3 +1,4 @@
+import urllib
 from typing import Any
 import io
 import os
@@ -29,9 +30,10 @@ class AbstractDownloader(abc.ABC):
 
     def setup(self):
 
+        self.init_handler()
+        self.set_get_post()
         self.set_options()
         self.open_dest()
-
 
     def set_destination(self, destination: str | None):
 
@@ -46,11 +48,20 @@ class AbstractDownloader(abc.ABC):
         else:
             self.destination = io.BytesIO()
 
+    def set_get_post(self):
+        self.qs = self.param('post') or self.param('get')
+        self.post = bool(self.param('post'))
+        
+        if self.qs:
+            self.qs = urllib.parse.urlencode(self.qs)
 
     @abc.abstractmethod
     def download(self) -> None:
         raise NotImplementedError()
 
+    @abc.abstractmethod
+    def init_handler(self) -> None:
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def set_options(self) -> None:
@@ -68,10 +79,10 @@ class CurlDownloader(AbstractDownloader):
     def download(self):
         pass
 
+    def init_handler(self):
+        self.handler = pycurl.Curl()
 
     def set_options(self):
-
-        self.handler = pycurl.Curl()
 
         params = [
             'ssl_verifypeer',
@@ -102,6 +113,7 @@ class CurlDownloader(AbstractDownloader):
 
         self.handler.setopt(pycurl.WRITEFUNCTION, self.destination.write)
 
+    # TODO: Add curl-specific get/post functions
 
 class RequestsDownloader(AbstractDownloader):
     """
