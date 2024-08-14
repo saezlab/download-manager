@@ -27,24 +27,33 @@ class AbstractDownloader(abc.ABC):
         self.desc = desc
         self.set_destination(destination)
 
+    def setup(self):
+
+        self.set_options()
+        self.open_dest()
+
 
     def set_destination(self, destination: str | None):
 
         self.desc['destination'] = destination or self.param('destination')
 
+
     def open_dest(self):
+
         if dest := self.param('destination'):
             self.destination = open(dest, 'wb')
 
         else:
             self.destination = io.BytesIO()
 
+
     @abc.abstractmethod
     def download(self) -> None:
         raise NotImplementedError()
 
+
     @abc.abstractmethod
-    def setup(self) -> None:
+    def set_options(self) -> None:
         raise NotImplementedError()
 
 
@@ -59,7 +68,8 @@ class CurlDownloader(AbstractDownloader):
     def download(self):
         pass
 
-    def setup(self):
+
+    def set_options(self):
 
         self.handler = pycurl.Curl()
 
@@ -85,8 +95,13 @@ class CurlDownloader(AbstractDownloader):
                     _curlopt.process(value),
                 )
 
-    def set_path(self):
-        pass
+
+    def open_dest(self):
+
+        super().open_dest()
+
+        self.handler.setopt(pycurl.WRITEFUNCTION, self.destination.write)
+
 
 class RequestsDownloader(AbstractDownloader):
     """
