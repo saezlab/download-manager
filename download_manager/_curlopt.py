@@ -1,10 +1,10 @@
 import re
 
 import pycurl
+from typing import Any
 
 
-SYNONYMS = {
-}
+SYNONYMS = {}
 
 
 def process(key: str, value: Any) -> Any:
