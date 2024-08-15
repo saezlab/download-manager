@@ -71,7 +71,7 @@ class Descriptor(abc.Mapping):
 
         self['url'] = (
             self['baseurl']
-                if self['post'] else
+                if self['post'] or not self['qs'] else
             f'{self["baseurl"]}?{self["qs"]}'
         )
 
