@@ -1,8 +1,8 @@
-import urllib
 from typing import Any
 import io
 import os
 import abc
+import urllib
 
 import pycurl
 
@@ -54,6 +54,15 @@ class AbstractDownloader(abc.ABC):
 
         return self.desc.param(key)
 
+    def close_dest(self):
+
+        if (
+            hasattr(self, 'destination')
+            and hasattr(self.destination, 'close')
+            and not isinstance(self.destination, io.BytesIO)
+        ):
+            self.destination.close()
+
     @property
     def url(self) -> str:
 
@@ -73,12 +82,12 @@ class AbstractDownloader(abc.ABC):
     def set_options(self) -> None:
 
         raise NotImplementedError()
-    
+
     @abc.abstractmethod
     def set_req_headers(self) -> None:
 
         raise NotImplementedError()
-    
+
     @abc.abstractmethod
     def set_resp_headers(self) -> None:
 
@@ -135,7 +144,7 @@ class CurlDownloader(AbstractDownloader):
 
         self.handler.setopt(
             self.handler.HTTPHEADER,
-            self.desc['headers']
+            self.desc['headers'],
         )
 
     def set_resp_headers(self):
