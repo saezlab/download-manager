@@ -34,6 +34,11 @@ class Descriptor(abc.Mapping):
 
             raise ValueError('Missing URL')
 
+        self['baseurl'] = self['url']
+
+        self.set_get_post()
+
+
     def __iter__(self):
         return iter(self._param)
 
@@ -42,7 +47,7 @@ class Descriptor(abc.Mapping):
 
     def __len__(self):
         return len(self._param)
-    
+
     def __getitem__(self, key: Any):
 
         return self._param.get(key, None)
@@ -57,5 +62,12 @@ class Descriptor(abc.Mapping):
 
     def set_get_post(self):
 
-        if self['query']:
-            self['qs'] = urllib.parse.urlencode(self['query'])
+        if q := self['query']:
+
+            self['qs'] = urllib.parse.urlencode(q)
+
+        self['url'] = (
+            self['baseurl']
+                if self['post'] else
+            f'{self["baseurl"]}?{self["qs"]}'
+        )
