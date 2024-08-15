@@ -35,6 +35,7 @@ class AbstractDownloader(abc.ABC):
         self.set_options()
         self.open_dest()
 
+
     def set_destination(self, destination: str | None):
 
         self.desc['destination'] = destination or self.param('destination')
@@ -79,7 +80,10 @@ class CurlDownloader(AbstractDownloader):
         super().__init__(desc)
 
     def download(self):
-        pass
+
+        self.handler.perform()
+        self.handler.close()
+
 
     def init_handler(self):
         self.handler = pycurl.Curl()
