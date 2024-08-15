@@ -114,6 +114,7 @@ class CurlDownloader(AbstractDownloader):
 
         self.handler.perform()
         self.handler.close()
+        self.destination.seek(0)
         self.close_dest()
 
 
