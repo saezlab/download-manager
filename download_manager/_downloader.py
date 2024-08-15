@@ -49,11 +49,21 @@ class AbstractDownloader(abc.ABC):
             self.destination = io.BytesIO()
 
     def set_get_post(self):
+
         self.qs = self.param('post') or self.param('get')
         self.post = bool(self.param('post'))
-        
+
         if self.qs:
             self.qs = urllib.parse.urlencode(self.qs)
+
+    def param(self, key: str) -> Any:
+
+        return self.desc.param(key)
+
+    @property
+    def url(self) -> str:
+
+        return self.desc.url + ('' if self.post else f'?{self.qs}')
 
     @abc.abstractmethod
     def download(self) -> None:
