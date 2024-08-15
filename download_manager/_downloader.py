@@ -33,7 +33,8 @@ class AbstractDownloader(abc.ABC):
         self.init_handler()
         self.set_options()
         self.open_dest()
-        self.set_headers()
+        self.set_req_headers()
+        self.set_resp_headers()
 
     def set_destination(self, destination: str | None):
 
@@ -73,7 +74,12 @@ class AbstractDownloader(abc.ABC):
         raise NotImplementedError()
     
     @abc.abstractmethod
-    def set_headers(self) -> None:
+    def set_req_headers(self) -> None:
+
+        raise NotImplementedError()
+    
+    @abc.abstractmethod
+    def set_resp_headers(self) -> None:
 
         raise NotImplementedError()
 
@@ -121,12 +127,17 @@ class CurlDownloader(AbstractDownloader):
 
         self.handler.setopt(pycurl.WRITEFUNCTION, self.destination.write)
 
-    def set_headers(self):
+    def set_req_headers(self):
 
         self.handler.setopt(
             self.handler.HTTPHEADER,
             self.desc['headers']
         )
+
+    def set_resp_headers(self):
+
+        self.resp_headers = []
+        self.handler.setopt(self.handler.HEADERFUNCTION, self.resp_headers.append)
 
 class RequestsDownloader(AbstractDownloader):
     """
