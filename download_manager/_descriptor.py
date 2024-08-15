@@ -36,6 +36,7 @@ class Descriptor(abc.Mapping):
             raise ValueError('Missing URL')
 
         self['baseurl'] = self['url']
+        self['followlocation'] = True
         self['ssl_verifypeer'] = False
 
         self.set_get_post()
