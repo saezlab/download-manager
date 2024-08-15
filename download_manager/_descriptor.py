@@ -1,5 +1,6 @@
 from typing import Any
 import os
+from collections import abc
 
 from . import _data
 
@@ -8,7 +9,7 @@ __all__ = [
 ]
 
 
-class Descriptor():
+class Descriptor(abc.Mapping):
     """
     Describe the descriptor
     """
@@ -18,7 +19,7 @@ class Descriptor():
 
         url_fname, *_ = list(args) + [None]
         self._param.update(kwargs)
-        fname = url_fname or self.param('fname')
+        fname = url_fname or self['fname']
 
         if fname and os.path.exists(fname):
 
@@ -32,18 +33,24 @@ class Descriptor():
 
             raise ValueError('Missing URL')
 
+    def __iter__(self):
+        return iter(self._param)
+
+    def __contains__(self, value):
+        return value in self._param.keys()
+
+    def __len__(self):
+        return len(self._param)
+    
+    def __getitem__(self, key: Any):
+
+        return self._param.get(key, None)
+
+    def __setitem__(self, key: Any, value: Any):
+
+        self._param[key] = value
 
     def from_file(self, fname: str):
 
         self._param.update(_data._module_data(fname))
 
-
-    def param(self, key: str) -> Any:
-
-        return self._param.get(key, None)
-
-
-    @property
-    def url(self) -> str:
-
-        return self.param('url')

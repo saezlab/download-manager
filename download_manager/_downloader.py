@@ -58,7 +58,7 @@ class AbstractDownloader(abc.ABC):
 
     def param(self, key: str) -> Any:
 
-        return self.desc.param(key)
+        return self.desc[key]
 
     @property
     def url(self) -> str:
@@ -109,7 +109,7 @@ class CurlDownloader(AbstractDownloader):
 
         for param in params:
 
-            if (value := self.desc.param(param)) is not None:
+            if (value := self.desc[param]) is not None:
 
                 self.handler.setopt(
                     getattr(self.handler, param.upper()),
