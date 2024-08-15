@@ -1,10 +1,9 @@
 from typing import Any
-import os
 from collections import abc
+import os
 import urllib
 
 from pypath_common import _misc as misc
-
 from . import _data
 
 __all__ = [
@@ -37,6 +36,7 @@ class Descriptor(abc.Mapping):
             raise ValueError('Missing URL')
 
         self['baseurl'] = self['url']
+        self['ssl_verifypeer'] = False
 
         self.set_get_post()
         self.set_headers()
@@ -79,12 +79,12 @@ class Descriptor(abc.Mapping):
         """
         Normalizes the format of the headers
         """
-        
+
         hdr = self['headers']
-        
+
         if isinstance(hdr, dict):
             hdr = [':'.join(h) for h in hdr.items()]
-        
+
         hdr = misc.to_list(hdr)
 
         self['headers'] = [
