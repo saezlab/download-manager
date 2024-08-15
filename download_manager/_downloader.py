@@ -63,6 +63,10 @@ class AbstractDownloader(abc.ABC):
         ):
             self.destination.close()
 
+    def __del__(self):
+
+        self.close_dest()
+
     @property
     def url(self) -> str:
 
@@ -105,6 +109,7 @@ class CurlDownloader(AbstractDownloader):
 
         self.handler.perform()
         self.handler.close()
+        self.close_dest()
 
 
     def init_handler(self):
