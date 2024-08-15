@@ -3,6 +3,8 @@ import os
 from collections import abc
 import urllib
 
+from pypath_common import _misc as misc
+
 from . import _data
 
 __all__ = [
@@ -37,6 +39,7 @@ class Descriptor(abc.Mapping):
         self['baseurl'] = self['url']
 
         self.set_get_post()
+        self.set_headers()
 
 
     def __iter__(self):
@@ -71,3 +74,22 @@ class Descriptor(abc.Mapping):
                 if self['post'] else
             f'{self["baseurl"]}?{self["qs"]}'
         )
+
+    def set_headers(self):
+        """
+        Normalizes the format of the headers
+        """
+        
+        hdr = self['headers']
+        
+        if isinstance(hdr, dict):
+            hdr = [':'.join(h) for h in hdr.items()]
+        
+        hdr = misc.to_list(hdr)
+
+        self['headers'] = [
+            s.encode('ascii')
+            if hasattr(s, 'encode')
+            else s
+            for s in hdr
+        ]
