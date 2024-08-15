@@ -1,6 +1,7 @@
 from typing import Any
 import os
 from collections import abc
+import urllib
 
 from . import _data
 
@@ -27,9 +28,9 @@ class Descriptor(abc.Mapping):
 
         else:
 
-            self._param['url'] = self.url or url_fname
+            self._param['url'] = self['url'] or url_fname
 
-        if not self.url:
+        if not self['url']:
 
             raise ValueError('Missing URL')
 
@@ -54,3 +55,7 @@ class Descriptor(abc.Mapping):
 
         self._param.update(_data._module_data(fname))
 
+    def set_get_post(self):
+
+        if self['query']:
+            self['qs'] = urllib.parse.urlencode(self['query'])

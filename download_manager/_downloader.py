@@ -48,17 +48,9 @@ class AbstractDownloader(abc.ABC):
         else:
             self.destination = io.BytesIO()
 
-    def set_get_post(self):
-
-        self.qs = self.param('post') or self.param('get')
-        self.post = bool(self.param('post'))
-
-        if self.qs:
-            self.qs = urllib.parse.urlencode(self.qs)
-
     def param(self, key: str) -> Any:
 
-        return self.desc[key]
+        return self.desc.param(key)
 
     @property
     def url(self) -> str:
@@ -109,7 +101,7 @@ class CurlDownloader(AbstractDownloader):
 
         for param in params:
 
-            if (value := self.desc[param]) is not None:
+            if (value := self.desc.param(param)) is not None:
 
                 self.handler.setopt(
                     getattr(self.handler, param.upper()),
