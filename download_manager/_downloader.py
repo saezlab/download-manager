@@ -193,13 +193,6 @@ class RequestsDownloader(AbstractDownloader):
 
 
     def set_options(self):
-        """
-        'tcp_keepalive',
-        'tcp_keepidle',
-        'ssl_enable_alpn',
-        'http_version',
-        'ignore_content_length',
-        """
 
         self.request.url = self.desc['url']
         self.send_args['allow_redirects'] = self.desc['followlocation']
@@ -216,8 +209,8 @@ class RequestsDownloader(AbstractDownloader):
 
 
     def download(self):
-        # TODO
-        response = self.session.send(self.request)
+
+        response = self.session.send(self.request, **self.send_args)
 
 
     def set_req_headers(self):
