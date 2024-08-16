@@ -12,6 +12,7 @@ from . import _data, _curlopt, _descriptor
 __all__ = [
     'AbstractDownloader',
     'CurlDownloader',
+    'PARAMS',
     'RequestsDownloader',
 ]
 
@@ -122,7 +123,7 @@ class CurlDownloader(AbstractDownloader):
             self,
             desc: _descriptor.Descriptor,
             destination: str | None = None,
-        ):
+    ):
 
         super().__init__(desc, destination)
 
@@ -172,7 +173,7 @@ class CurlDownloader(AbstractDownloader):
         self.resp_headers = []
         self.handler.setopt(
             self.handler.HEADERFUNCTION,
-            self.resp_headers.append
+            self.resp_headers.append,
         )
 
 class RequestsDownloader(AbstractDownloader):
@@ -180,9 +181,13 @@ class RequestsDownloader(AbstractDownloader):
     Requests download
     """
 
-    def __init__(self, desc: _descriptor.Descriptor):
+    def __init__(
+        self,
+        desc: _descriptor.Descriptor,
+        destination: str | None = None,
+    ):
 
-        super().__init__(desc)
+        super().__init__(desc, destination)
 
 
     def init_handler(self):
@@ -198,20 +203,23 @@ class RequestsDownloader(AbstractDownloader):
         self.send_args['allow_redirects'] = self.desc['followlocation']
         self.send_args['timeout'] = (
             self.desc['connecttimeout'],
-            self.desc['timeout']
+            self.desc['timeout'],
         )
+        self.request.method = 'POST' if self.desc['post'] else 'GET'
 
-        self.session.verify = self.desc['ssl_verifypeer']
+        #self.session.verify = self.desc['ssl_verifypeer']
 
-        if self.desc['ssl_verifypeer'] and self.desc['cainfo_override']:
+        #if self.desc['ssl_verifypeer'] and self.desc['cainfo_override']:
 
-            self.session.verify = self.desc['cainfo_override']
+        #    self.session.verify = self.desc['cainfo_override']
 
 
     def download(self):
 
-        with self.session.send(self.request, **self.send_args) as resp:
-            
+        req = self.request.prepare()
+
+        with self.session.send(req, **self.send_args) as resp:
+
             self.response = resp
             resp.raise_for_status()
 
@@ -219,7 +227,8 @@ class RequestsDownloader(AbstractDownloader):
 
                 self.destination.write(chunk)
 
-            self.destination.seek(0)
+        self.destination.seek(0)
+        self.close_dest()
 
 
     def set_req_headers(self):
@@ -228,5 +237,5 @@ class RequestsDownloader(AbstractDownloader):
 
 
     def set_resp_headers(self):
-
-        self.resp_headers = self.response.headers
+        pass
+        #self.resp_headers = self.response.headers
