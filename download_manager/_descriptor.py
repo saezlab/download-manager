@@ -88,7 +88,7 @@ class Descriptor(abc.Mapping):
         hdr = self['headers']
 
         if isinstance(hdr, dict):
-            hdr = [':'.join(h) for h in hdr.items()]
+            hdr = [': '.join(h) for h in hdr.items()]
 
         hdr = misc.to_list(hdr)
 
@@ -98,3 +98,11 @@ class Descriptor(abc.Mapping):
             else s
             for s in hdr
         ]
+
+
+    def get_headers_dict(self):
+
+        return dict(
+            elem.decode().split(': ', maxsplit=1)
+            for elem in self['headers']
+        )
