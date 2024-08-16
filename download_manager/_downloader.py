@@ -194,8 +194,6 @@ class RequestsDownloader(AbstractDownloader):
 
     def set_options(self):
         """
-        'connecttimeout',
-        'timeout',
         'tcp_keepalive',
         'tcp_keepidle',
         'ssl_enable_alpn',
@@ -205,6 +203,10 @@ class RequestsDownloader(AbstractDownloader):
 
         self.request.url = self.desc['url']
         self.send_args['allow_redirects'] = self.desc['followlocation']
+        self.send_args['timeout'] = (
+            self.desc['connecttimeout'],
+            self.desc['timeout']
+        )
 
         self.session.verify = self.desc['ssl_verifypeer']
 
