@@ -126,6 +126,7 @@ class CurlDownloader(AbstractDownloader):
 
         super().__init__(desc, destination)
 
+
     def download(self):
 
         self.handler.perform()
@@ -138,8 +139,8 @@ class CurlDownloader(AbstractDownloader):
 
         self.handler = pycurl.Curl()
 
-    def set_options(self):
 
+    def set_options(self):
 
         for param in PARAMS:
 
@@ -150,11 +151,13 @@ class CurlDownloader(AbstractDownloader):
                     _curlopt.process(param, value),
                 )
 
+
     def open_dest(self):
 
         super().open_dest()
 
         self.handler.setopt(pycurl.WRITEFUNCTION, self.destination.write)
+
 
     def set_req_headers(self):
 
@@ -162,6 +165,7 @@ class CurlDownloader(AbstractDownloader):
             self.handler.HTTPHEADER,
             self.desc['headers'],
         )
+
 
     def set_resp_headers(self):
 
@@ -177,28 +181,43 @@ class RequestsDownloader(AbstractDownloader):
     """
 
     def __init__(self, desc: _descriptor.Descriptor):
+
         super().__init__(desc)
+
 
     def init_handler(self):
 
-        self.handler = requests.Request()
+        self.session = requests.Session()
+        self.request = requests.Request()
 
 
     def set_options(self):
+        """
+        'ssl_verifypeer',
+        'cainfo',
+        'followlocation',
+        'connecttimeout',
+        'timeout',
+        'tcp_keepalive',
+        'tcp_keepidle',
+        'ssl_enable_alpn',
+        'http_version',
+        'ignore_content_length',
+        """
+
+        self.request.url = self.desc['url']
 
 
     def download(self):
-
-        s = self.session or requests.Session()
-
-        response = s.send(self.handler)
+        # TODO
+        response = self.session.send(self.request)
 
 
     def set_req_headers(self):
 
-        self.handler.headers.update(self.desc['headers'])
+        self.request.headers.update(self.desc.get_headers_dict())
 
 
     def set_resp_headers(self):
-
-        self.resp_headers = self.handler.headers
+        pass
+        #self.resp_headers = self.handler.headers
