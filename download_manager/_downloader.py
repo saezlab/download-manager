@@ -189,6 +189,7 @@ class RequestsDownloader(AbstractDownloader):
 
         self.session = requests.Session()
         self.request = requests.Request()
+        self.send_args = {}
 
 
     def set_options(self):
@@ -206,6 +207,7 @@ class RequestsDownloader(AbstractDownloader):
         """
 
         self.request.url = self.desc['url']
+        self.send_args['allow_redirects'] = self.desc['followlocation']
 
 
     def download(self):
