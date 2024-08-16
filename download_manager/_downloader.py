@@ -14,6 +14,7 @@ __all__ = [
     'RequestsDownloader',
 ]
 
+
 class AbstractDownloader(abc.ABC):
     """
     Single download manager
@@ -161,7 +162,10 @@ class CurlDownloader(AbstractDownloader):
     def set_resp_headers(self):
 
         self.resp_headers = []
-        self.handler.setopt(self.handler.HEADERFUNCTION, self.resp_headers.append)
+        self.handler.setopt(
+            self.handler.HEADERFUNCTION,
+            self.resp_headers.append
+        )
 
 class RequestsDownloader(AbstractDownloader):
     """

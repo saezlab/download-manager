@@ -1,14 +1,16 @@
+__all__ = [
+    'Descriptor',
+]
+
 from typing import Any
 from collections import abc
 import os
 import urllib
 
+import certifi
 from pypath_common import _misc as misc
-from . import _data
 
-__all__ = [
-    'Descriptor',
-]
+from . import _data
 
 
 class Descriptor(abc.Mapping):
@@ -34,9 +36,11 @@ class Descriptor(abc.Mapping):
         if not self['url']:
 
             raise ValueError('Missing URL')
+        
+        if not self['cainfo']:
+            self['cainfo'] =  certifi.where()
 
         self['baseurl'] = self['url']
-        self['ssl_verifypeer'] = False
 
         self.set_get_post()
         self.set_headers()
