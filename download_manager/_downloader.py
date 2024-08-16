@@ -181,4 +181,24 @@ class RequestsDownloader(AbstractDownloader):
 
     def init_handler(self):
 
-        self.handler = requests.Session()
+        self.handler = requests.Request()
+
+
+    def set_options(self):
+
+
+    def download(self):
+
+        s = self.session or requests.Session()
+
+        response = s.send(self.handler)
+
+
+    def set_req_headers(self):
+
+        self.handler.headers.update(self.desc['headers'])
+
+
+    def set_resp_headers(self):
+
+        self.resp_headers = self.handler.headers
