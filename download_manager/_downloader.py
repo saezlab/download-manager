@@ -5,6 +5,7 @@ import abc
 import urllib
 
 import pycurl
+import requests
 
 from . import _data, _curlopt, _descriptor
 
@@ -175,3 +176,7 @@ class RequestsDownloader(AbstractDownloader):
 
     def __init__(self, desc: _descriptor.Descriptor):
         super().__init__(desc)
+
+    def init_handler(self):
+
+        self.handler = requests.Session()
