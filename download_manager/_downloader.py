@@ -211,7 +211,8 @@ class RequestsDownloader(AbstractDownloader):
     def download(self):
 
         with self.session.send(self.request, **self.send_args) as resp:
-
+            
+            self.response = resp
             resp.raise_for_status()
 
             for chunk in resp.iter_content(1024):
@@ -227,5 +228,5 @@ class RequestsDownloader(AbstractDownloader):
 
 
     def set_resp_headers(self):
-        pass
-        #self.resp_headers = self.handler.headers
+
+        self.resp_headers = self.response.headers
