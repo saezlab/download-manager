@@ -15,6 +15,20 @@ __all__ = [
     'RequestsDownloader',
 ]
 
+PARAMS = [
+    'ssl_verifypeer',
+    'cainfo',
+    'url',
+    'followlocation',
+    'connecttimeout',
+    'timeout',
+    'tcp_keepalive',
+    'tcp_keepidle',
+    'ssl_enable_alpn',
+    'http_version',
+    'ignore_content_length',
+]
+
 
 class AbstractDownloader(abc.ABC):
     """
@@ -121,25 +135,13 @@ class CurlDownloader(AbstractDownloader):
 
 
     def init_handler(self):
+
         self.handler = pycurl.Curl()
 
     def set_options(self):
 
-        params = [
-            'ssl_verifypeer',
-            'cainfo',
-            'url',
-            'followlocation',
-            'connecttimeout',
-            'timeout',
-            'tcp_keepalive',
-            'tcp_keepidle',
-            'ssl_enable_alpn',
-            'http_version',
-            'ignore_content_length',
-        ]
 
-        for param in params:
+        for param in PARAMS:
 
             if (value := self.desc[param]) is not None:
 
