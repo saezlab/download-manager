@@ -39,6 +39,8 @@ class Descriptor(abc.Mapping):
 
         if not self['cainfo']:
             self['cainfo'] =  certifi.where()
+        else:
+            self['cainfo_override'] = self['cainfo']
 
         self['baseurl'] = self['url']
         self['followlocation'] = True

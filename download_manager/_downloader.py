@@ -194,9 +194,6 @@ class RequestsDownloader(AbstractDownloader):
 
     def set_options(self):
         """
-        'ssl_verifypeer',
-        'cainfo',
-        'followlocation',
         'connecttimeout',
         'timeout',
         'tcp_keepalive',
@@ -208,6 +205,12 @@ class RequestsDownloader(AbstractDownloader):
 
         self.request.url = self.desc['url']
         self.send_args['allow_redirects'] = self.desc['followlocation']
+
+        self.session.verify = self.desc['ssl_verifypeer']
+
+        if self.desc['ssl_verifypeer'] and self.desc['cainfo_override']:
+
+            self.session.verify = self.desc['cainfo_override']
 
 
     def download(self):
