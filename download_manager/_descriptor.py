@@ -36,11 +36,12 @@ class Descriptor(abc.Mapping):
         if not self['url']:
 
             raise ValueError('Missing URL')
-        
+
         if not self['cainfo']:
             self['cainfo'] =  certifi.where()
 
         self['baseurl'] = self['url']
+        self['followlocation'] = True
 
         self.set_get_post()
         self.set_headers()
