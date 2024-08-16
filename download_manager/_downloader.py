@@ -126,6 +126,7 @@ class CurlDownloader(AbstractDownloader):
 
         params = [
             'ssl_verifypeer',
+            'cainfo',
             'url',
             'followlocation',
             'connecttimeout',
