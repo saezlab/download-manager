@@ -114,6 +114,7 @@ class AbstractDownloader(abc.ABC):
 
         raise NotImplementedError()
 
+
 class CurlDownloader(AbstractDownloader):
     """
     Curl download
@@ -152,6 +153,10 @@ class CurlDownloader(AbstractDownloader):
                     _curlopt.process(param, value),
                 )
 
+        if self.desc['post']:
+
+            self.handler.setopt(self.handler.POSTFIELDS, self.desc['qs'])
+
 
     def open_dest(self):
 
@@ -175,6 +180,7 @@ class CurlDownloader(AbstractDownloader):
             self.handler.HEADERFUNCTION,
             self.resp_headers.append,
         )
+
 
 class RequestsDownloader(AbstractDownloader):
     """
