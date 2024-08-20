@@ -4,6 +4,7 @@ import os
 import abc
 import urllib
 import json
+import mimetypes
 
 import pycurl
 import requests
@@ -235,11 +236,23 @@ class RequestsDownloader(AbstractDownloader):
         if self.desc['post']:
 
             self.request.method = 'POST'
-            data = (
-                json.dumps(self.desc['query'])
-                if self.desc['json']
-                else self.desc['query']
-            )
+
+            if self.desc['multipart']:
+
+                data = self.desc['multipart']['data']
+                self.request.files = {
+                    k: (v, open(v, 'rb'), mimetypes.guess_type(v)[0])
+                    for k, v in self.desc.multipart['files'].items()
+                }
+
+            else:
+
+                data = (
+                    json.dumps(self.desc['query'])
+                    if self.desc['json']
+                    else self.desc['query']
+                )
+
             self.request.data = data
 
         else:
