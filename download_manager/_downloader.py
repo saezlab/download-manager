@@ -211,12 +211,13 @@ class RequestsDownloader(AbstractDownloader):
             self.desc['connecttimeout'],
             self.desc['timeout'],
         )
+
         self.request.method = 'POST' if self.desc['post'] else 'GET'
+        self.send_args['data'] = self.desc['qs']
 
+        # TODO: Figure out how to add these options in `requests`
         #self.session.verify = self.desc['ssl_verifypeer']
-
         #if self.desc['ssl_verifypeer'] and self.desc['cainfo_override']:
-
         #    self.session.verify = self.desc['cainfo_override']
 
 
