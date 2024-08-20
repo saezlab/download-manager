@@ -159,6 +159,8 @@ class CurlDownloader(AbstractDownloader):
 
             if self.desc['multipart']:
 
+                self.desc['headers'].append(b'Content-Type: multipart/form-data')
+
                 self.handler.setopt(
                     self.handler.HTTPPOST,
                     [
@@ -242,7 +244,7 @@ class RequestsDownloader(AbstractDownloader):
                 data = self.desc['multipart']['data']
                 self.request.files = {
                     k: (v, open(v, 'rb'), mimetypes.guess_type(v)[0])
-                    for k, v in self.desc.multipart['files'].items()
+                    for k, v in self.desc["multipart"]['files'].items()
                 }
 
             else:

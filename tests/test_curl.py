@@ -83,3 +83,26 @@ def test_json(http_url):
     content["data"] = json.loads(content["data"])
 
     assert content["data"] == data
+
+
+def test_multipart(http_url, download_dir):
+
+    http_url = f'{http_url}post'
+    test_file = os.path.join(download_dir, "tempfile.txt")
+
+    with open(test_file, 'w') as fp:
+        fp.write("Something")
+
+    data = {'test_query': 'value', 'question': True, 'number': 2, 'file': test_file}
+
+    dl = dm.CurlDownloader(dm.Descriptor(http_url, multipart=data))
+    dl.setup()
+    dl.download()
+    content = dl.destination.read()
+    content = json.loads(content)
+    data.pop('file')
+
+    data_str = {k: str(v) for k, v in data.items()}
+
+    assert content['form'] == data_str
+    assert content['files'] == {'file': 'Something'}

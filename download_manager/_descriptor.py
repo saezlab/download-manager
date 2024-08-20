@@ -91,8 +91,6 @@ class Descriptor(abc.Mapping):
 
         if self['multipart']:
 
-            self['headers'].append(b'Content-Type: multipart/form-data')
-
             multipart = {'data': {}, 'files': {}}
 
             for k, v in self['multipart'].items():
