@@ -3,6 +3,13 @@ import json
 
 import download_manager as dm
 
+__all__ = [
+    'test_most_simple',
+    'test_post',
+    'test_simple_tls',
+    'test_simple_to_file',
+]
+
 
 def test_most_simple(http_url):
 
@@ -28,7 +35,7 @@ def test_simple_tls(https_url):
     assert contents.startswith('<!DOCTYPE html')
 
 
-def test_simpl_to_file(http_url, download_dir):
+def test_simple_to_file(http_url, download_dir):
 
     path = os.path.join(download_dir, 'test.html')
 
@@ -39,7 +46,7 @@ def test_simpl_to_file(http_url, download_dir):
     assert os.path.exists(path)
     assert dl.destination.closed
 
-    with open(path, 'r') as fp:
+    with open(path) as fp:
         contents = fp.read()
 
     assert contents.startswith('<!DOCTYPE html')
@@ -47,9 +54,9 @@ def test_simpl_to_file(http_url, download_dir):
 
 def test_post(http_url):
 
-    http_url = f"{http_url}post"
+    http_url = f'{http_url}post'
 
-    data = {"test_query": "value", "question": True, "number": 2}
+    data = {'test_query': 'value', 'question': True, 'number': 2}
 
     dl = dm.RequestsDownloader(dm.Descriptor(http_url, query=data, post=True))
     dl.setup()
@@ -59,4 +66,4 @@ def test_post(http_url):
 
     data_str = {k: str(v) for k, v in data.items()}
 
-    assert content["form"] == data_str
+    assert content['form'] == data_str
