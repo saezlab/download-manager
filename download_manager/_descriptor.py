@@ -76,11 +76,15 @@ class Descriptor(abc.Mapping):
 
             self['qs'] = urllib.parse.urlencode(q)
 
+        if self['json']:
+            self['post'] = True
+
         self['url'] = (
             self['baseurl']
                 if self['post'] or not self['qs'] else
             f'{self["baseurl"]}?{self["qs"]}'
         )
+
 
     def set_headers(self):
         """
@@ -100,6 +104,10 @@ class Descriptor(abc.Mapping):
             else s
             for s in hdr
         ]
+
+        if self['json']:
+
+            self['headers'].append(b'Content-Type: application/json')
 
 
     def get_headers_dict(self):

@@ -3,6 +3,7 @@ import io
 import os
 import abc
 import urllib
+import json
 
 import pycurl
 import requests
@@ -155,8 +156,12 @@ class CurlDownloader(AbstractDownloader):
 
         if self.desc['post']:
 
-            self.handler.setopt(self.handler.POSTFIELDS, self.desc['qs'])
-
+            data = (
+                json.dumps(self.desc['query'])
+                if self.desc['json']
+                else self.desc['qs']
+            )
+            self.handler.setopt(self.handler.POSTFIELDS, data)
 
     def open_dest(self):
 
@@ -215,7 +220,12 @@ class RequestsDownloader(AbstractDownloader):
         if self.desc['post']:
 
             self.request.method = 'POST'
-            self.request.data = self.desc['query']
+            data = (
+                json.dumps(self.desc['query'])
+                if self.desc['json']
+                else self.desc['query']
+            )
+            self.request.data = data
 
         else:
             self.request.method = 'GET'
