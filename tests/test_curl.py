@@ -66,4 +66,20 @@ def test_post(http_url):
 
     data_str = {k: str(v) for k, v in data.items()}
 
-    assert content['form'] == data_str
+    assert content["form"] == data_str
+
+
+def test_json(http_url):
+
+    http_url = f"{http_url}post"
+
+    data = {"test_query": "value", "question": True, "number": 2}
+
+    dl = dm.CurlDownloader(dm.Descriptor(http_url, query = data, json = True))
+    dl.setup()
+    dl.download()
+    content = dl.destination.read()
+    content = json.loads(content)
+    content["data"] = json.loads(content["data"])
+
+    assert content["data"] == data
