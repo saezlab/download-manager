@@ -1,4 +1,5 @@
 import os
+import json
 
 import download_manager as dm
 
@@ -42,3 +43,18 @@ def test_simpl_to_file(http_url, download_dir):
         contents = fp.read()
 
     assert contents.startswith('<!DOCTYPE html')
+
+
+def test_post(http_url):
+
+    http_url = f"{http_url}post"
+
+    data = {"test_query": "value", "question": True, "number": 2}
+
+    dl = dm.CurlDownloader(dm.Descriptor(http_url, query = data, post = True))
+    dl.setup()
+    dl.download()
+    content = dl.destination.read()
+    content = json.loads(content)
+
+    assert content["form"] != data
