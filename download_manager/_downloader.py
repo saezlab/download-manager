@@ -212,8 +212,13 @@ class RequestsDownloader(AbstractDownloader):
             self.desc['timeout'],
         )
 
-        self.request.method = 'POST' if self.desc['post'] else 'GET'
-        self.send_args['data'] = self.desc['qs']
+        if self.desc['post']:
+
+            self.request.method = 'POST'
+            self.request.data = self.desc['query']
+
+        else:
+            self.request.method = 'GET'
 
         # TODO: Figure out how to add these options in `requests`
         #self.session.verify = self.desc['ssl_verifypeer']
