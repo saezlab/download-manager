@@ -57,4 +57,6 @@ def test_post(http_url):
     content = dl.destination.read()
     content = json.loads(content)
 
-    assert content["form"] != data
+    data_str = {k: str(v) for k, v in data.items()}
+
+    assert content["form"] == data_str
