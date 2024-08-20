@@ -47,6 +47,7 @@ class Descriptor(abc.Mapping):
 
         self.set_get_post()
         self.set_headers()
+        self.set_multipart()
 
 
     def __iter__(self):
@@ -76,7 +77,7 @@ class Descriptor(abc.Mapping):
 
             self['qs'] = urllib.parse.urlencode(q)
 
-        if self['json']:
+        if self['json'] or self['multipart']:
             self['post'] = True
 
         self['url'] = (
@@ -84,6 +85,23 @@ class Descriptor(abc.Mapping):
                 if self['post'] or not self['qs'] else
             f'{self["baseurl"]}?{self["qs"]}'
         )
+
+
+    def set_multipart(self):
+
+        if self['multipart']:
+
+            self['headers'].append(b'Content-Type: multipart/form-data')
+
+            multipart = {'data': {}, 'files': {}}
+
+            for k, v in self['multipart'].items():
+
+                v = str(v)
+                param_typ = 'files' if os.path.exists(v) else 'data'
+                multipart[param_typ][k] = v
+
+            self['multipart'] = multipart
 
 
     def set_headers(self):

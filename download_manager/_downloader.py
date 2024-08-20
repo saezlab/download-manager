@@ -156,12 +156,27 @@ class CurlDownloader(AbstractDownloader):
 
         if self.desc['post']:
 
-            data = (
-                json.dumps(self.desc['query'])
-                if self.desc['json']
-                else self.desc['qs']
-            )
-            self.handler.setopt(self.handler.POSTFIELDS, data)
+            if self.desc['multipart']:
+
+                self.handler.setopt(
+                    self.handler.HTTPPOST,
+                    [
+                        (name, value if typ == 'data' else (pycurl.FORM_FILE, value))
+                        for typ, params in self.desc['multipart'].items()
+                        for name, value in params.items()
+                    ]
+                )
+
+            else:
+
+                data = (
+                    json.dumps(self.desc['query'])
+                    if self.desc['json']
+                    else self.desc['qs']
+                )
+
+                self.handler.setopt(self.handler.POSTFIELDS, data)
+
 
     def open_dest(self):
 
