@@ -46,6 +46,8 @@ class AbstractDownloader(abc.ABC):
         super().__init__()
         self.desc = desc
         self.set_destination(destination)
+        self.setup()
+
 
     def setup(self):
 
