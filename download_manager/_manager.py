@@ -6,6 +6,6 @@ import cache_manager as cm
 class DownloadManager:
 
 
-    def __init__(self, cache_dir: str | None = None):
+    def __init__(self, path: str | None, pkg: str | None = None):
 
-        self.cache = cm.Cache(cache_dir)
+        self.cache = cm.Cache(path=path, pkg=pkg)
