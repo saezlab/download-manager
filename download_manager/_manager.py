@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 import cache_manager as cm
 
 from pypath_common import data as _data
@@ -9,6 +11,13 @@ from ._descriptor import Descriptor
 __all__ = [
     'DownloadManager',
 ]
+
+DL_ATTRS = {
+    'query',
+    'post',
+    'json',
+    'multipart',
+}
 
 
 class DownloadManager:
@@ -46,11 +55,30 @@ class DownloadManager:
 
             self.cache = cm.Cache(path=path, pkg=pkg)
 
-    def download(self, url: str, dest: str | None = None, **kwargs):
+
+    def download(self, url: str, dest: str | None = None, **kwargs) -> str:
 
         desc = Descriptor(url, **kwargs)
+        dest = dest or self._cache_path(desc)
+
+        if not dest:
+            # temporary:
+            raise ValueError('Can not download without a destination path.')
 
         backend = self.config.get('backend', 'requests').capitalize()
         downloader = getattr(_downloader, f'{backend}Downloader')(desc, dest)
 
         downloader.download()
+
+        return dest
+
+
+    def _cache_path(self, desc: Descriptor) -> str | None:
+
+        if self.cache:
+
+            param = {desc[key] for key in DL_ATTRS if key in desc}
+
+            item = self.cache.best_or_new(desc.url, param)
+
+            return item.path
