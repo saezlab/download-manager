@@ -1,7 +1,14 @@
 from __future__ import annotations
 
 import cache_manager as cm
+
 from pypath_common import data as _data
+from . import _downloader
+from ._descriptor import Descriptor
+
+__all__ = [
+    'DownloadManager',
+]
 
 
 class DownloadManager:
@@ -12,8 +19,8 @@ class DownloadManager:
             path: str | None,
             pkg: str | None = None,
             config: str | dict | None = None,
-            **kwargs
-        ):
+            **kwargs,
+    ):
 
         self._set_config(config, kwargs)
         self._set_cache(path=path, pkg=pkg)
@@ -38,3 +45,12 @@ class DownloadManager:
         if path or pkg:
 
             self.cache = cm.Cache(path=path, pkg=pkg)
+
+    def download(self, url: str, dest: str | None = None, **kwargs):
+
+        desc = Descriptor(url, **kwargs)
+
+        backend = self.config.get('backend', 'requests').capitalize()
+        downloader = getattr(_downloader, f'{backend}Downloader')(desc, dest)
+
+        downloader.download()
