@@ -68,26 +68,30 @@ class DownloadManager:
         ) -> str:
 
         desc = Descriptor(url, **kwargs)
-        dest = dest or self._cache_path(desc, newer_than, older_than)
+        item = None
 
         if not dest:
-            # temporary:
-            raise ValueError('Can not download without a destination path.')
+            item = self._get_cache_item(desc, newer_than, older_than)
+            dest = item.path
 
-        backend = self.config.get('backend', 'requests').capitalize()
-        downloader = getattr(_downloader, f'{backend}Downloader')(desc, dest)
+        if (
+            (item and item.rstatus == Status.UNINITIALIZED.value)
+            or (not item and not os.path.exists(dest))
+        ):
+            backend = self.config.get('backend', 'requests').capitalize()
+            dwnldr = getattr(_downloader, f'{backend}Downloader')(desc, dest)
 
-        downloader.download()
+            dwnldr.download()
 
         return dest
 
 
-    def _cache_path(
+    def _get_cache_item(
             self,
             desc: Descriptor,
             newer_than: str | datetime.datetime | None = None,
             older_than: str | datetime.datetime | None = None,
-        ) -> str | None:
+        ) -> cm.CacheItem | None:
 
         if self.cache:
 
@@ -98,8 +102,8 @@ class DownloadManager:
                 param = param,
                 older_than = older_than,
                 newer_than = newer_than,
-                new_status = Status.WRITE.value,
+                new_status = Status.UNINITIALIZED.value,
                 status = {Status.READY.value, Status.WRITE.value},
             )
 
-            return item.path
+            return item
