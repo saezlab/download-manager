@@ -63,7 +63,7 @@ class DownloadManager:
     def download(
             self,
             url: str,
-            dest: str | None = None,
+            dest: str | bool | None = None,
             newer_than: str | datetime.datetime | None = None,
             older_than: str | datetime.datetime | None = None,
             **kwargs
@@ -73,7 +73,8 @@ class DownloadManager:
         item = None
         dwnldr = True
 
-        if not dest:
+        if dest is True or dest is None:
+
             item = self._get_cache_item(desc, newer_than, older_than)
             dest = item.path
 
@@ -87,19 +88,28 @@ class DownloadManager:
                 item.status = Status.WRITE.value
 
             backend = self.config.get('backend', 'requests').capitalize()
-            dwnldr = getattr(_downloader, f'{backend}Downloader')(desc, dest)
+            downloader = getattr(_downloader, f'{backend}Downloader')(
+                desc,
+                dest or None
+            )
 
-            dwnldr.download()
+            downloader.download()
 
             if item:
 
-                item.status = Status.READY.value if dwnldr.ok else Status.FAILED.value
+                item.status = (
+                    Status.READY.value
+                        if downloader.ok else
+                    Status.FAILED.value
+                )
 
         if (
-            dwnldr.ok and
-            os.path.exists(dest) and
+            downloader.ok and
+            (os.path.exists(dest) or dest is False) and
             (not item or item.status == Status.READY.value)
         ):
+            if dest is False:
+                dest = downloader.destination
 
             _log('Download successful.')
 
