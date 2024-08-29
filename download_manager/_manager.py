@@ -9,6 +9,8 @@ from cache_manager._status import Status
 from pypath_common import data as _data
 from . import _downloader
 from ._descriptor import Descriptor
+from . import _log
+
 
 __all__ = [
     'DownloadManager',
@@ -69,19 +71,37 @@ class DownloadManager:
 
         desc = Descriptor(url, **kwargs)
         item = None
+        dwnldr = True
 
         if not dest:
             item = self._get_cache_item(desc, newer_than, older_than)
             dest = item.path
 
         if (
-            (item and item.rstatus == Status.UNINITIALIZED.value)
-            or (not item and not os.path.exists(dest))
+            (item and item.rstatus == Status.UNINITIALIZED.value) or
+            (not item and not os.path.exists(dest))
         ):
+
+            if item:
+
+                item.status = Status.WRITE.value
+
             backend = self.config.get('backend', 'requests').capitalize()
             dwnldr = getattr(_downloader, f'{backend}Downloader')(desc, dest)
 
             dwnldr.download()
+
+            if item:
+
+                item.status = Status.READY.value if dwnldr.ok else Status.FAILED.value
+
+        if (
+            dwnldr.ok and
+            os.path.exists(dest) and
+            (not item or item.status == Status.READY.value)
+        ):
+
+            _log('Download successful.')
 
         return dest
 

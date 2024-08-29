@@ -119,6 +119,11 @@ class AbstractDownloader(abc.ABC):
         raise NotImplementedError()
 
 
+    def ok(self) -> bool:
+
+        return getattr(self, 'success', False)
+
+
 class CurlDownloader(AbstractDownloader):
     """
     Curl download
