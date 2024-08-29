@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import os
+import datetime
 
 import cache_manager as cm
+from cache_manager._status import Status
 
 from pypath_common import data as _data
 from . import _downloader
@@ -56,10 +58,17 @@ class DownloadManager:
             self.cache = cm.Cache(path=path, pkg=pkg)
 
 
-    def download(self, url: str, dest: str | None = None, **kwargs) -> str:
+    def download(
+            self,
+            url: str,
+            dest: str | None = None,
+            newer_than: str | datetime.datetime | None = None,
+            older_than: str | datetime.datetime | None = None,
+            **kwargs
+        ) -> str:
 
         desc = Descriptor(url, **kwargs)
-        dest = dest or self._cache_path(desc)
+        dest = dest or self._cache_path(desc, newer_than, older_than)
 
         if not dest:
             # temporary:
@@ -73,12 +82,24 @@ class DownloadManager:
         return dest
 
 
-    def _cache_path(self, desc: Descriptor) -> str | None:
+    def _cache_path(
+            self,
+            desc: Descriptor,
+            newer_than: str | datetime.datetime | None = None,
+            older_than: str | datetime.datetime | None = None,
+        ) -> str | None:
 
         if self.cache:
 
             param = {desc[key] for key in DL_ATTRS if key in desc}
 
-            item = self.cache.best_or_new(desc.url, param)
+            item = self.cache.best_or_new(
+                uri = desc.url,
+                param = param,
+                older_than = older_than,
+                newer_than = newer_than,
+                new_status = Status.WRITE.value,
+                status = {Status.READY.value, Status.WRITE.value},
+            )
 
             return item.path
