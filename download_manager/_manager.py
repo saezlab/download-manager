@@ -67,11 +67,11 @@ class DownloadManager:
             newer_than: str | datetime.datetime | None = None,
             older_than: str | datetime.datetime | None = None,
             **kwargs
-        ) -> str:
+        ) -> str | io.BytesIO | None:
 
         desc = Descriptor(url, **kwargs)
         item = None
-        dwnldr = True
+        downloader = None
 
         if dest is True or dest is None:
 
@@ -104,16 +104,16 @@ class DownloadManager:
                 )
 
         if (
-            downloader.ok and
+            (downloader is None or downloader.ok) and
             (os.path.exists(dest) or dest is False) and
             (not item or item.status == Status.READY.value)
         ):
+
             if dest is False:
+
                 dest = downloader.destination
 
-            _log('Download successful.')
-
-        return dest
+            return dest
 
 
     def _get_cache_item(
