@@ -3,16 +3,14 @@ from __future__ import annotations
 import os
 import datetime
 
-import cache_manager as cm
-from cache_manager._status import Status
-
 from pypath_common import data as _data
-from . import _downloader
+from cache_manager._status import Status
+import cache_manager as cm
+from . import _log, _downloader
 from ._descriptor import Descriptor
-from . import _log
-
 
 __all__ = [
+    'DL_ATTRS',
     'DownloadManager',
 ]
 
@@ -29,7 +27,7 @@ class DownloadManager:
 
     def __init__(
             self,
-            path: str | None,
+            path: str | None = None,
             pkg: str | None = None,
             config: str | dict | None = None,
             **kwargs,
@@ -59,6 +57,10 @@ class DownloadManager:
 
             self.cache = cm.Cache(path=path, pkg=pkg)
 
+        else:
+
+            self.cache = None
+
 
     def download(
             self,
@@ -66,8 +68,12 @@ class DownloadManager:
             dest: str | bool | None = None,
             newer_than: str | datetime.datetime | None = None,
             older_than: str | datetime.datetime | None = None,
-            **kwargs
-        ) -> str | io.BytesIO | None:
+            **kwargs,
+    ) -> str | io.BytesIO | None:
+        """
+        Args:
+            dest: If `False`, goes to buffer.
+        """
 
         desc = Descriptor(url, **kwargs)
         item = None
@@ -80,7 +86,7 @@ class DownloadManager:
 
         if (
             (item and item.rstatus == Status.UNINITIALIZED.value) or
-            (not item and not os.path.exists(dest))
+            (not item and (not os.path.exists(dest) or dest is False))
         ):
 
             if item:
@@ -90,7 +96,7 @@ class DownloadManager:
             backend = self.config.get('backend', 'requests').capitalize()
             downloader = getattr(_downloader, f'{backend}Downloader')(
                 desc,
-                dest or None
+                dest or None,
             )
 
             downloader.download()
@@ -121,7 +127,7 @@ class DownloadManager:
             desc: Descriptor,
             newer_than: str | datetime.datetime | None = None,
             older_than: str | datetime.datetime | None = None,
-        ) -> cm.CacheItem | None:
+    ) -> cm.CacheItem | None:
 
         if self.cache:
 
