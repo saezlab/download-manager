@@ -18,6 +18,22 @@ def test_dest_buffer(http_url):
     assert dest.read().startswith(b'<!DOCTYPE html')
 
 
+def test_dest_path(http_url, download_dir):
+
+    path = os.path.join(download_dir, 'test_dest_path.html')
+    manager = dm.DownloadManager()
+    dest = manager.download(http_url, path)
+
+    assert manager.cache is None
+    assert isinstance(dest, str)
+    assert dest == path
+    assert os.path.exists(dest)
+
+    with open(dest) as fp:
+
+        assert fp.read().startswith('<!DOCTYPE html')
+
+
 def test_dest_cache(http_url, download_dir):
 
     manager = dm.DownloadManager(path = download_dir)
