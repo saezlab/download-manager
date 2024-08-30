@@ -129,13 +129,13 @@ class DownloadManager:
             older_than: str | datetime.datetime | None = None,
     ) -> cm.CacheItem | None:
 
-        if self.cache:
+        if self.cache is not None:
 
-            param = {desc[key] for key in DL_ATTRS if key in desc}
+            params = {desc[key] for key in DL_ATTRS if key in desc}
 
             item = self.cache.best_or_new(
-                uri = desc.url,
-                param = param,
+                uri = desc['url'],
+                params = params,
                 older_than = older_than,
                 newer_than = newer_than,
                 new_status = Status.UNINITIALIZED.value,
