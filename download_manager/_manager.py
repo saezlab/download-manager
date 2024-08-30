@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import datetime
+import io
 
 from pypath_common import data as _data
 from cache_manager._status import Status
