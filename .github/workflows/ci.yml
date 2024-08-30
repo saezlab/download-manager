@@ -70,11 +70,11 @@ jobs:
     - name: Tests and test coverage
       if: ${{ github.event_name == 'push' }}
       run: |
-        poetry run pytest --cov --disable-warnings
+        poetry run pytest -v --cov --color=yes --durations=0 --disable-warnings
     - name: Tests
       if: ${{ github.event_name == 'pull_request' }}
       run: |
-        poetry run pytest --disable-warnings
+        poetry run pytest -v --color=yes --durations=0 --disable-warnings
     - name: Upload coverage reports to Codecov
       if: ${{ github.event_name == 'push' && matrix.os == 'ubuntu-latest' }}
       uses: codecov/codecov-action@v4

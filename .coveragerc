@@ -1,12 +1,12 @@
 [paths]
 source =
-    project_name
+    download_manager
     */site-packages/download-manager
 
 [run]
 branch = true
 parallel = true
-source = download-manager
+source = download_manager
 omit = */__init__.py
 
 [report]
