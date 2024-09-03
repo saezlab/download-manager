@@ -139,6 +139,18 @@ class DownloadManager:
 
 
     def _set_config(self, config: str | dict | None, **kwargs):
+        """
+        Establishes the configuration for the download manager.
+
+        Args:
+            config:
+                Accepts either a dictionary with the key/value pairs
+                corresponding to parameter name/value or a path to the
+                configuration file.
+
+            **kwargs:
+                Other/extra configuration parameters.
+        """
 
         if isinstance(config, str) and os.path.exists(config):
 
