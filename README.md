@@ -1,11 +1,9 @@
-# download-manager
+[![Tests][badge-ci]][link-ci]
+[![Coverage][badge-cov]][link-cov]
 
-[![Tests][badge-tests]][link-tests]
-[![Documentation][badge-docs]][link-docs]
+[badge-cov]: https://codecov.io/github/saezlab/download-manager/graph/badge.svg
+[link-cov]: https://codecov.io/github/saezlab/download-manager
+[badge-ci]: https://img.shields.io/github/actions/workflow/status/saezlab/download-manager/ci.yml?branch=main
+[link-ci]: https://github.com/saezlab/download-manager/actions/workflows/ci.yml
 
-[badge-tests]: https://img.shields.io/github/actions/workflow/status/saezlab/download-manager/test.yaml?branch=main
-[link-tests]: https://github.com/saezlab/download-manager/actions/workflows/test.yml
-[badge-docs]: https://img.shields.io/readthedocs/download-manager
-[link-docs]: https://download-manager.readthedocs.io
-
-Download manager for Python
+# A Download Manager Python Module
