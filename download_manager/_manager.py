@@ -125,6 +125,17 @@ class DownloadManager:
 
 
     def _set_cache(self, path: str | None, pkg: str | None = None):
+        """
+        Initializes the cache manager interface if a path or package name given.
+
+        Args:
+            path:
+                Path where to set the cache directory.
+            pkg:
+                Package name. If no path is given, creates a directory with the
+                given package name in the OS default cache directory. Optional,
+                defaults to `None`.
+        """
 
         path = path or self.config.get('path', None)
         pkg = pkg or self.config.get('pkg', None)
