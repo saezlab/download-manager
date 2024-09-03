@@ -107,6 +107,25 @@ class DownloadManager:
             newer_than: str | datetime.datetime | None = None,
             older_than: str | datetime.datetime | None = None,
     ) -> cm.CacheItem | None:
+        """
+        Retrieves a cache item instance from the cache if it exists, otherwise
+        creates a new one based on the given `Descriptor`.
+
+        Args:
+            desc:
+                Instance of `Descriptor` containing the information of the item
+                to be retrieved or created.
+            newer_than:
+                Date of the item is required to be newer than. Optional,
+                defaults to `None`.
+            older_than:
+                Date of the item is required to be older than. Optional,
+                defaults to `None`.
+
+        Returns:
+            The `CacheItem` instance of the retrieved/created entry from the
+            cache.
+        """
 
         if self.cache is not None:
 
