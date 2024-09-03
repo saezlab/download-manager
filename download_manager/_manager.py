@@ -1,18 +1,19 @@
 from __future__ import annotations
 
+__all__ = [
+    'DL_ATTRS',
+    'DownloadManager',
+]
+
 import os
 import datetime
+import io
 
 from pypath_common import data as _data
 from cache_manager._status import Status
 import cache_manager as cm
 from . import _log, _downloader
 from ._descriptor import Descriptor
-
-__all__ = [
-    'DL_ATTRS',
-    'DownloadManager',
-]
 
 DL_ATTRS = {
     'query',
@@ -23,7 +24,10 @@ DL_ATTRS = {
 
 
 class DownloadManager:
-
+    """
+    Download manager, stores general configuration for the downloads and
+    interfaces the downloads with the cache manager.
+    """
 
     def __init__(
             self,
@@ -35,31 +39,6 @@ class DownloadManager:
 
         self._set_config(config, kwargs)
         self._set_cache(path=path, pkg=pkg)
-
-
-    def _set_config(self, config: str | dict | None, kwargs):
-
-        if isinstance(config, str) and os.path.exists(config):
-
-            config = _data.load(config)
-
-        config = config or {}
-        config.update(kwargs)
-        self.config = config
-
-
-    def _set_cache(self, path: str | None, pkg: str | None = None):
-
-        path = path or self.config.get('path', None)
-        pkg = pkg or self.config.get('pkg', None)
-
-        if path or pkg:
-
-            self.cache = cm.Cache(path=path, pkg=pkg)
-
-        else:
-
-            self.cache = None
 
 
     def download(
@@ -143,3 +122,28 @@ class DownloadManager:
             )
 
             return item
+
+
+    def _set_cache(self, path: str | None, pkg: str | None = None):
+
+        path = path or self.config.get('path', None)
+        pkg = pkg or self.config.get('pkg', None)
+
+        if path or pkg:
+
+            self.cache = cm.Cache(path=path, pkg=pkg)
+
+        else:
+
+            self.cache = None
+
+
+    def _set_config(self, config: str | dict | None, kwargs):
+
+        if isinstance(config, str) and os.path.exists(config):
+
+            config = _data.load(config)
+
+        config = config or {}
+        config.update(kwargs)
+        self.config = config
