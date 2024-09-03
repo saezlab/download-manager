@@ -138,7 +138,7 @@ class DownloadManager:
             self.cache = None
 
 
-    def _set_config(self, config: str | dict | None, kwargs):
+    def _set_config(self, config: str | dict | None, **kwargs):
 
         if isinstance(config, str) and os.path.exists(config):
 
