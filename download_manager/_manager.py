@@ -27,6 +27,26 @@ class DownloadManager:
     """
     Download manager, stores general configuration for the downloads and
     interfaces the downloads with the cache manager.
+
+    Args:
+        path:
+            Path where to set the cache directory.
+        pkg:
+            Package name. If no path is given, creates a directory with the
+            given package name in the OS default cache directory. Optional,
+            defaults to `None`.
+        config:
+            Accepts either a dictionary with the key/value pairs corresponding
+            to parameter name/value or a path to the configuration file.
+        **kwargs:
+            Other/extra configuration parameters.
+
+    Attrs:
+        cache:
+            Instance of `CacheManager` to interface with the cache.
+        config:
+            Configuration parameters for the download manager as dictionary of
+            key/value pairs corresponding to the parameter name/value.
     """
 
     def __init__(
@@ -210,7 +230,6 @@ class DownloadManager:
                 Accepts either a dictionary with the key/value pairs
                 corresponding to parameter name/value or a path to the
                 configuration file.
-
             **kwargs:
                 Other/extra configuration parameters.
         """
