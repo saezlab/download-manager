@@ -50,21 +50,50 @@ class DownloadManager:
             **kwargs,
     ) -> str | io.BytesIO | None:
         """
+        Downloads a file from the given URL (if not already available in the
+        cache).
+
         Args:
-            dest: If `False`, goes to buffer.
+            url:
+                URL address of the file to be downloaded/retrieved.
+            dest:
+                Destination path, if set to `False`, the download is set to use
+                the buffer (memory) for the download. If no destination is
+                given, tries to obtain the destination path from the entry in
+                the cache. Optional, defaults to `None`.
+            newer_than:
+                Only used when retrieving an item from the cache. Date of the
+                item is required to be newer than. Optional, defaults to `None`.
+            older_than:
+                Only used when retrieving an item from the cache. Date of the
+                item is required to be older than. Optional, defaults to `None`.
+            **kwargs:
+                Keyword arguments passed to the `Descriptor` instance. See the
+                documentation of `Descriptor` for more details. Optional,
+                defaults to `None`.
+
+        Returns:
+            The path where the requested file is located or the pointer to the
+            file instance in the buffer.
         """
 
         desc = Descriptor(url, **kwargs)
         item = None
         downloader = None
 
+        # XXX: Do we mean dest == True or bool(dest) is True?
+        # Retrieve/create item from/in cache
+        # If dest is anything but False
         if dest is True or dest is None:
 
             item = self._get_cache_item(desc, newer_than, older_than)
             dest = item.path
 
+        # Perform the download
         if (
+            # If there's an uninitialized item
             (item and item.rstatus == Status.UNINITIALIZED.value) or
+            # Or no item and no existing file/dest is buffer
             (not item and (not os.path.exists(dest) or dest is False))
         ):
 
@@ -88,13 +117,17 @@ class DownloadManager:
                     Status.FAILED.value
                 )
 
+        # Return destination path/pointer
         if (
+            # No donwload or successfully finished
             (downloader is None or downloader.ok) and
+            # And file exists or dest is buffer
             (os.path.exists(dest) or dest is False) and
+            # And no item or item is ready
             (not item or item.status == Status.READY.value)
         ):
 
-            if dest is False:
+            if dest is False: # File downloaded to buffer
 
                 dest = downloader.destination
 
