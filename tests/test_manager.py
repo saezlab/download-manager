@@ -46,3 +46,19 @@ def test_dest_cache(http_url, download_dir):
     with open(dest) as fp:
 
         assert fp.read().startswith('<!DOCTYPE html')
+
+def test_cache_integration(http_url, download_dir):
+
+    query = {'foo': 'bar'}
+    manager = dm.DownloadManager(path = download_dir)
+    dest = manager.download(
+        http_url,
+        query=query,
+    )
+
+    it = manager.cache.best_or_new(http_url, {'query': query})
+    
+    # Checking attrs
+    print(it.attrs)
+    assert it.attrs['_uri'] == http_url
+    assert it.attrs['query'] == query
