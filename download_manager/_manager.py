@@ -104,7 +104,7 @@ class DownloadManager:
         # XXX: Do we mean dest == True or bool(dest) is True?
         # Retrieve/create item from/in cache
         # If dest is anything but False
-        if dest is True or dest is None:
+        if not isinstance(dest, str) and (dest is True or dest is None):
 
             item = self._get_cache_item(desc, newer_than, older_than)
             dest = item.path
