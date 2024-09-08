@@ -5,9 +5,9 @@ __all__ = [
     'DownloadManager',
 ]
 
+import io
 import os
 import datetime
-import io
 
 from pypath_common import data as _data
 from cache_manager._status import Status
@@ -101,9 +101,8 @@ class DownloadManager:
         item = None
         downloader = None
 
-        # XXX: Do we mean dest == True or bool(dest) is True?
         # Retrieve/create item from/in cache
-        # If dest is anything but False
+        # If dest is not str and not False
         if not isinstance(dest, str) and (dest is True or dest is None):
 
             item = self._get_cache_item(desc, newer_than, older_than)
@@ -182,7 +181,7 @@ class DownloadManager:
 
         if self.cache is not None:
 
-            params = {desc[key] for key in DL_ATTRS if key in desc}
+            params = {key: desc[key] for key in DL_ATTRS if key in desc}
 
             item = self.cache.best_or_new(
                 uri = desc['url'],

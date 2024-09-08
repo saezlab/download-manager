@@ -15,7 +15,20 @@ __all__ = [
 SYNONYMS = {}
 
 
-def ensure_int(value: Any) -> int | None:
+def ensure_int(value: Any) -> int | str | None:
+    """
+    Attempts getting the numerical (integer) value of a PyCurl option. If not
+    returns the name of option as string.
+
+    Args:
+        value:
+            Integer or PyCurl option name to be converted to a valid integer
+            corresponding to that option.
+
+    Returns:
+        The integer value of the PyCurl option. If none was found, returns back
+        the option name or `None` if the provided value is not int, bool or str.
+    """
 
     if isinstance(value, (int, bool)):
 
@@ -34,7 +47,18 @@ def ensure_int(value: Any) -> int | None:
     return None
 
 
-def http_version(ver: str):
+def http_version(ver: str): # XXX: not used?
+    """
+    Ensures http version is correctly formatted according to the pre-defined
+    available options in PyCurl.
+
+    Args:
+        ver:
+            The http version option name.
+
+    Returns:
+        The correctly formatted http version option for PyCurl as a string.
+    """
 
     ver = str(ver)
 
@@ -47,6 +71,19 @@ def http_version(ver: str):
 
 
 def process(key: str, value: Any) -> Any:
+    """
+    Standardizes PyCurl parameters.
+
+    Args:
+        key:
+            Parameter name/synonym to standardize.
+        value:
+            Value of the parameter to standardize.
+
+    Returns:
+        Integer value corresponding to the PyCurl option (if available) or the
+        option name otherwise.
+    """
 
     if (proc := SYNONYMS.get(key, globals().get(key, None))):
 
