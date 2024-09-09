@@ -17,7 +17,7 @@ from . import _data
 
 class Descriptor(abc.Mapping):
     """
-    Describe the descriptor
+    Dictionary-like class collecting all parameters that describe a download.
     """
 
     def __init__(self, *args, **kwargs):
@@ -81,12 +81,26 @@ class Descriptor(abc.Mapping):
         self._param[key] = value
 
 
-    def from_file(self, fname: str):
+    def from_file(self, fname: str): # TODO: Specify format of the config file
+        """
+        Establishes all parameters of the descriptor from a given file.
+
+        Args:
+            fname:
+                Path to the file with the parameters.
+        """
 
         self._param.update(_data._module_data(fname))
 
 
-    def get_headers_dict(self):
+    def get_headers_dict(self) -> dict:
+        """
+        Returns the request headers as a dictionary.
+
+        Returns:
+            A dictionary with the headers with key/value pairs as header
+            name/value respectively.
+        """
 
         return dict(
             elem.decode().split(': ', maxsplit=1)
@@ -95,6 +109,10 @@ class Descriptor(abc.Mapping):
 
 
     def set_get_post(self):
+        """
+        Establishes the GET/POST parameters for the request as well as the URL
+        accordingly.
+        """
 
         if q := self['query']:
 
@@ -113,7 +131,7 @@ class Descriptor(abc.Mapping):
 
     def set_headers(self):
         """
-        Normalizes the format of the headers
+        Normalizes the format and sets the headers for the request.
         """
 
         hdr = self['headers']
@@ -136,6 +154,12 @@ class Descriptor(abc.Mapping):
 
 
     def set_multipart(self):
+        """
+        Sets the `'multipart'` parameter for multiple-file downloads, which is a
+        classifies the parts in a dictionary with keys `'data'` and `'files'`
+        and values are dictionaries of key/value pairs for each of the
+        corresponding items.
+        """
 
         if self['multipart']:
 
