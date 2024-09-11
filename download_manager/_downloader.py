@@ -168,12 +168,19 @@ class CurlDownloader(AbstractDownloader):
 
             if self.desc['multipart']:
 
-                self.desc['headers'].append(b'Content-Type: multipart/form-data')
+                self.desc['headers'].append(
+                    b'Content-Type: multipart/form-data'
+                )
 
                 self.handler.setopt(
                     self.handler.HTTPPOST,
                     [
-                        (name, value if typ == 'data' else (pycurl.FORM_FILE, value))
+                        (
+                            name,
+                            value
+                            if typ == 'data'
+                            else (pycurl.FORM_FILE, value)
+                        )
                         for typ, params in self.desc['multipart'].items()
                         for name, value in params.items()
                     ]
