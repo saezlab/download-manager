@@ -48,6 +48,7 @@ def test_dest_cache(http_url, download_dir):
 
         assert fp.read().startswith('<!DOCTYPE html')
 
+
 def test_cache_integration(http_url, download_dir):
 
     query = {'foo': 'bar'}
@@ -68,3 +69,24 @@ def test_cache_integration(http_url, download_dir):
     assert it.params['_uri'] == http_url
     assert it.params[_constants.DL_PARAMS_KEY]['query'] == query
     assert it.uri == http_url
+
+
+def test_cache_desc_reconstitution(http_url, download_dir):
+
+    query = {'foo': 'bar'}
+    manager = dm.DownloadManager(path=download_dir)
+    desc, item, dest = manager._download(
+        http_url,
+        query=query,
+        timeout=5,
+    )
+
+    print(item.attrs[_constants.DL_DESC_KEY].keys())
+    assert 'timeout' in item.attrs[_constants.DL_DESC_KEY]
+
+    it = manager.cache.best_or_new(
+        http_url,
+        params = {
+            _constants.DL_PARAMS_KEY: {'query': query},
+        }
+    )
