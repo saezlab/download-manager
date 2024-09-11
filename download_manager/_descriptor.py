@@ -44,11 +44,7 @@ class Descriptor(abc.Mapping):
 
             self['cainfo'] =  certifi.where()
 
-        else:
-
-            self['cainfo_override'] = self['cainfo']
-
-        self['baseurl'] = self['url']
+        self['baseurl'] = self['baseurl'] or self['url']
         self['followlocation'] = True
 
         self.set_get_post()
