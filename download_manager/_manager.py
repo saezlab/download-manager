@@ -98,6 +98,26 @@ class DownloadManager:
             file instance in the buffer.
         """
 
+        *_, dest = self._download(
+            url,
+            dest=dest,
+            newer_than=newer_than,
+            older_than=older_than,
+            **kwargs
+        )
+
+        return dest
+
+
+    def _download(
+            self,
+            url: str,
+            dest: str | bool | None = None,
+            newer_than: str | datetime.datetime | None = None,
+            older_than: str | datetime.datetime | None = None,
+            **kwargs,
+    ) -> tuple[Descriptor, cm.CacheItem, str | io.BytesIO | None]:
+
         desc = Descriptor(url, **kwargs)
         item = None
         downloader = None
@@ -151,7 +171,7 @@ class DownloadManager:
 
                 dest = downloader.destination
 
-            return dest
+        return desc, item, dest
 
 
     def _get_cache_item(
