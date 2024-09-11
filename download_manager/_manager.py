@@ -14,6 +14,7 @@ from cache_manager._status import Status
 import cache_manager as cm
 from . import _log, _downloader
 from ._descriptor import Descriptor
+from . import _constants
 
 DL_ATTRS = {
     'query',
@@ -181,11 +182,11 @@ class DownloadManager:
 
         if self.cache is not None:
 
-            params = {key: desc[key] for key in DL_ATTRS if key in desc}
+            dl_params = {key: desc[key] for key in DL_ATTRS if key in desc}
 
             item = self.cache.best_or_new(
                 uri = desc['url'],
-                params = params,
+                params = {_constants.DL_PARAMS_KEY: dl_params},
                 older_than = older_than,
                 newer_than = newer_than,
                 new_status = Status.UNINITIALIZED.value,

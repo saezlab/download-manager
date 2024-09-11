@@ -4,6 +4,7 @@ import os
 import cache_manager as cm
 
 import download_manager as dm
+from download_manager import _constants
 
 __all__ = []
 
@@ -56,9 +57,14 @@ def test_cache_integration(http_url, download_dir):
         query=query,
     )
 
-    it = manager.cache.best_or_new(http_url, params={'query': query})
-    
+    it = manager.cache.best_or_new(
+        http_url,
+        params = {
+            _constants.DL_PARAMS_KEY: {'query': query},
+        }
+    )
+
     # Checking attrs
     assert it.params['_uri'] == http_url
-    assert it.params['query'] == query
+    assert it.params[_constants.DL_PARAMS_KEY]['query'] == query
     assert it.uri == http_url
