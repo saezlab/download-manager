@@ -73,7 +73,7 @@ def test_cache_integration(http_url, download_dir):
 
 def test_cache_desc_reconstitution(http_url, download_dir):
 
-    query = {'foo': 'bar'}
+    query = {'foo2': 'bar'}
     manager = dm.DownloadManager(path=download_dir)
     desc, item, dest = manager._download(
         http_url,
@@ -81,7 +81,6 @@ def test_cache_desc_reconstitution(http_url, download_dir):
         timeout=5,
     )
 
-    print(item.attrs[_constants.DL_DESC_KEY].keys())
     assert 'timeout' in item.attrs[_constants.DL_DESC_KEY]
 
     it = manager.cache.best_or_new(
