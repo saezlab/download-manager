@@ -83,6 +83,11 @@ def test_cache_desc_reconstitution(http_url, download_dir):
 
     assert 'timeout' in item.attrs[_constants.DL_DESC_KEY]
 
+    desc_recon = dm.Descriptor(**item.attrs[_constants.DL_DESC_KEY])
+
+    # how destination is written into the database???
+    assert dict(desc_recon) == dict(desc)
+
     it = manager.cache.best_or_new(
         http_url,
         params = {
