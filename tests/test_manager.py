@@ -50,15 +50,15 @@ def test_dest_cache(http_url, download_dir):
 def test_cache_integration(http_url, download_dir):
 
     query = {'foo': 'bar'}
-    manager = dm.DownloadManager(path = download_dir)
+    manager = dm.DownloadManager(path=download_dir)
     dest = manager.download(
         http_url,
         query=query,
     )
 
-    it = manager.cache.best_or_new(http_url, {'query': query})
+    it = manager.cache.best_or_new(http_url, params={'query': query})
     
     # Checking attrs
-    print(it.attrs)
-    assert it.attrs['_uri'] == http_url
-    assert it.attrs['query'] == query
+    assert it.params['_uri'] == http_url
+    assert it.params['query'] == query
+    assert it.uri == http_url
