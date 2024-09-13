@@ -169,7 +169,7 @@ class DownloadManager:
 
             if dest is False: # File downloaded to buffer
 
-                dest = downloader.destination
+                dest = downloader._destination
 
         return desc, item, dest
 

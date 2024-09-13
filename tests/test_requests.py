@@ -17,7 +17,7 @@ def test_most_simple(http_url):
     dl.setup()
     dl.download()
 
-    contents = dl.destination.read().decode('utf-8')
+    contents = dl._destination.read().decode('utf-8')
 
     assert len(contents)
     assert contents.startswith('<!DOCTYPE html')
@@ -29,7 +29,7 @@ def test_simple_tls(https_url):
     dl.setup()
     dl.download()
 
-    contents = dl.destination.read().decode('utf-8')
+    contents = dl._destination.read().decode('utf-8')
 
     assert len(contents)
     assert contents.startswith('<!DOCTYPE html')
@@ -44,7 +44,7 @@ def test_simple_to_file(http_url, download_dir):
     dl.download()
 
     assert os.path.exists(path)
-    assert dl.destination.closed
+    assert dl._destination.closed
 
     with open(path) as fp:
         contents = fp.read()
@@ -61,7 +61,7 @@ def test_post(http_url):
     dl = dm.RequestsDownloader(dm.Descriptor(http_url, query=data, post=True))
     dl.setup()
     dl.download()
-    content = dl.destination.read()
+    content = dl._destination.read()
     content = json.loads(content)
 
     data_str = {k: str(v) for k, v in data.items()}
@@ -78,7 +78,7 @@ def test_json(http_url):
     dl = dm.RequestsDownloader(dm.Descriptor(http_url, query=data, json=True))
     dl.setup()
     dl.download()
-    content = dl.destination.read()
+    content = dl._destination.read()
     content = json.loads(content)
     content["data"] = json.loads(content["data"])
 
@@ -98,7 +98,7 @@ def test_multipart(http_url, download_dir):
     dl = dm.RequestsDownloader(dm.Descriptor(http_url, multipart=data))
     dl.setup()
     dl.download()
-    content = dl.destination.read()
+    content = dl._destination.read()
     content = json.loads(content)
     data.pop('file')
 
