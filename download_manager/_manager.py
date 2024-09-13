@@ -153,7 +153,7 @@ class DownloadManager:
 
             downloader.download()
 
-            self._report_finished(item)
+            self._report_finished(item, downloader)
 
         # Return destination path/pointer
         if (
@@ -263,7 +263,18 @@ class DownloadManager:
         self.config = config
 
 
-    def _report_finished(self, item: CacheItem) -> None:
+    def _report_started(self, item: cm.CacheItem) -> None:
+
+        if item:
+
+            item.status = Status.WRITE.value
+
+
+    def _report_finished(
+        self,
+        item: cm.CacheItem,
+        downloader: cm.Downloader.AbstractDownloader
+    ) -> None:
 
         if item:
 
@@ -272,10 +283,3 @@ class DownloadManager:
                     if downloader.ok else
                 Status.FAILED.value
             )
-
-
-    def _report_started(self, item: CacheItem) -> None:
-
-        if item:
-
-            item.status = Status.WRITE.value
