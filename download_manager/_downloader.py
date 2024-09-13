@@ -62,16 +62,16 @@ class AbstractDownloader(abc.ABC):
 
     def set_destination(self, destination: str | None):
 
-        self.desc['destination'] = destination or self.param('destination')
+        self.destination = destination or self.param('destination')
 
 
     def open_dest(self):
 
-        if dest := self.param('destination'):
-            self.destination = open(dest, 'wb')
+        if dest := self.destination:
+            self._destination = open(dest, 'wb')
 
         else:
-            self.destination = io.BytesIO()
+            self._destination = io.BytesIO()
 
     def param(self, key: str) -> Any:
 
@@ -80,11 +80,12 @@ class AbstractDownloader(abc.ABC):
     def close_dest(self):
 
         if (
-            hasattr(self, 'destination')
-            and hasattr(self.destination, 'close')
-            and not isinstance(self.destination, io.BytesIO)
+            hasattr(self, '_destination')
+            and hasattr(self._destination, 'close')
+            and not isinstance(self._destination, io.BytesIO)
         ):
-            self.destination.close()
+
+            self._destination.close()
 
     def __del__(self):
 
@@ -144,7 +145,7 @@ class CurlDownloader(AbstractDownloader):
 
         self.handler.perform()
         self.handler.close()
-        self.destination.seek(0)
+        self._destination.seek(0)
         self.close_dest()
 
 
@@ -201,7 +202,7 @@ class CurlDownloader(AbstractDownloader):
 
         super().open_dest()
 
-        self.handler.setopt(pycurl.WRITEFUNCTION, self.destination.write)
+        self.handler.setopt(pycurl.WRITEFUNCTION, self._destination.write)
 
 
     def set_req_headers(self):
@@ -293,9 +294,9 @@ class RequestsDownloader(AbstractDownloader):
 
             for chunk in resp.iter_content(1024):
 
-                self.destination.write(chunk)
+                self._destination.write(chunk)
 
-        self.destination.seek(0)
+        self._destination.seek(0)
         self.close_dest()
 
 
