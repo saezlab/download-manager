@@ -143,9 +143,7 @@ class DownloadManager:
             (not item and (not os.path.exists(dest) or dest is False))
         ):
 
-            if item:
-
-                item.status = Status.WRITE.value
+            self._report_started(item)
 
             backend = self.config.get('backend', 'requests').capitalize()
             downloader = getattr(_downloader, f'{backend}Downloader')(
@@ -155,13 +153,7 @@ class DownloadManager:
 
             downloader.download()
 
-            if item:
-
-                item.status = (
-                    Status.READY.value
-                        if downloader.ok else
-                    Status.FAILED.value
-                )
+            self._report_finished(item)
 
         # Return destination path/pointer
         if (
@@ -269,3 +261,21 @@ class DownloadManager:
         config = config or {}
         config.update(kwargs)
         self.config = config
+
+
+    def _report_finished(self, item: CacheItem) -> None:
+
+        if item:
+
+            item.status = (
+                Status.READY.value
+                    if downloader.ok else
+                Status.FAILED.value
+            )
+
+
+    def _report_started(self, item: CacheItem) -> None:
+
+        if item:
+
+            item.status = Status.WRITE.value
