@@ -203,12 +203,12 @@ class DownloadManager:
         if self.cache is not None:
 
             dl_params = {key: desc[key] for key in DL_ATTRS if key in desc}
-            attrs = dict(desc)
+            desc_params = dict(desc)
 
             item = self.cache.best_or_new(
                 uri = desc['url'],
                 params = {_constants.DL_PARAMS_KEY: dl_params},
-                attrs = {_constants.DL_DESC_KEY: attrs},
+                attrs = {_constants.DL_DESC_KEY: desc_params},
                 older_than = older_than,
                 newer_than = newer_than,
                 new_status = Status.UNINITIALIZED.value,
