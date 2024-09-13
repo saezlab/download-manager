@@ -64,7 +64,7 @@ class DownloadManager:
 
     def download(
             self,
-            url: str,
+            url: str | Descriptor,
             dest: str | bool | None = None,
             newer_than: str | datetime.datetime | None = None,
             older_than: str | datetime.datetime | None = None,
@@ -77,6 +77,8 @@ class DownloadManager:
         Args:
             url:
                 URL address of the file to be downloaded/retrieved.
+                Alternatively, a `Descriptor` object can be provided with all
+                the download parameters.
             dest:
                 Destination path, if set to `False`, the download is set to use
                 the buffer (memory) for the download. If no destination is
@@ -111,14 +113,18 @@ class DownloadManager:
 
     def _download(
             self,
-            url: str,
+            url: str | Descriptor,
             dest: str | bool | None = None,
             newer_than: str | datetime.datetime | None = None,
             older_than: str | datetime.datetime | None = None,
             **kwargs,
     ) -> tuple[Descriptor, cm.CacheItem, str | io.BytesIO | None]:
 
-        desc = Descriptor(url, **kwargs)
+        desc = (
+            url
+                if isinstance(url, Descriptor) else
+            Descriptor(url, **kwargs)
+        )
         item = None
         downloader = None
 
