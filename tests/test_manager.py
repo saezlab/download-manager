@@ -85,12 +85,8 @@ def test_cache_desc_reconstitution(http_url, download_dir):
 
     desc_recon = dm.Descriptor(**item.attrs[_constants.DL_DESC_KEY])
 
-    # how destination is written into the database???
     assert dict(desc_recon) == dict(desc)
 
-    it = manager.cache.best_or_new(
-        http_url,
-        params = {
-            _constants.DL_PARAMS_KEY: {'query': query},
-        }
-    )
+    desc_recon2, item2, dest2 = manager._download(desc_recon)
+
+    assert dict(desc_recon2) == dict(desc)
