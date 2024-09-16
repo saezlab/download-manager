@@ -133,6 +133,7 @@ class Descriptor(abc.Mapping):
         hdr = self['headers']
 
         if isinstance(hdr, dict):
+
             hdr = [': '.join(h) for h in hdr.items()]
 
         hdr = misc.to_list(hdr)

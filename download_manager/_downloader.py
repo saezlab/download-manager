@@ -83,9 +83,11 @@ class AbstractDownloader(abc.ABC):
     def open_dest(self):
 
         if dest := self.destination:
+
             self._destination = open(dest, 'wb')
 
         else:
+
             self._destination = io.BytesIO()
 
 
@@ -303,6 +305,7 @@ class RequestsDownloader(AbstractDownloader):
             self.request.data = data
 
         else:
+
             self.request.method = 'GET'
 
         # TODO: Figure out how to add these options in `requests` (if possible)
@@ -317,5 +320,6 @@ class RequestsDownloader(AbstractDownloader):
 
 
     def set_resp_headers(self):
+
         pass
         #self.resp_headers = self.response.headers
