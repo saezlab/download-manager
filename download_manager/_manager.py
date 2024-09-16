@@ -119,6 +119,39 @@ class DownloadManager:
             older_than: str | datetime.datetime | None = None,
             **kwargs,
     ) -> tuple[Descriptor, cm.CacheItem, str | io.BytesIO | None]:
+        """
+        Downloads a file from the given URL (if not already available in the
+        cache). Secret method called by the public one but returning also the
+        instances of the descriptor and the cache item alongside with the
+        destination.
+
+        Args:
+            url:
+                URL address of the file to be downloaded/retrieved.
+                Alternatively, a `Descriptor` object can be provided with all
+                the download parameters.
+            dest:
+                Destination path, if set to `False`, the download is set to use
+                the buffer (memory) for the download. If no destination is
+                given, tries to obtain the destination path from the entry in
+                the cache. Optional, defaults to `None`.
+            newer_than:
+                Only used when retrieving an item from the cache. Date of the
+                item is required to be newer than. Optional, defaults to `None`.
+            older_than:
+                Only used when retrieving an item from the cache. Date of the
+                item is required to be older than. Optional, defaults to `None`.
+            **kwargs:
+                Keyword arguments passed to the `Descriptor` instance. See the
+                documentation of `Descriptor` for more details. Optional,
+                defaults to `None`.
+
+        Returns:
+            Tuple of three elements in the following order: The instance of the
+            download `Descriptor`, the instance of the corresponding `CacheItem`
+            if there's a cache available and the path where the requested file
+            is located or the pointer to the file instance in the buffer.
+        """
 
         desc = (
             url
