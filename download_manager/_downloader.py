@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+__all__ = [
+    'AbstractDownloader',
+    'CurlDownloader',
+    'PARAMS',
+    'RequestsDownloader',
+]
+
 from typing import Any
 import io
 import os
@@ -11,14 +18,9 @@ import mimetypes
 import pycurl
 import requests
 
-from . import _data, _curlopt, _descriptor
-
-__all__ = [
-    'AbstractDownloader',
-    'CurlDownloader',
-    'PARAMS',
-    'RequestsDownloader',
-]
+from . import _data
+from . import _curlopt
+from . import _descriptor
 
 PARAMS = [
     'ssl_verifypeer',
@@ -51,31 +53,16 @@ class AbstractDownloader(abc.ABC):
         self.setup()
 
 
-    def setup(self):
+    def __del__(self):
 
-        self.init_handler()
-        self.set_options()
-        self.open_dest()
-        self.set_req_headers()
-        self.set_resp_headers()
+        self.close_dest()
 
 
-    def set_destination(self, destination: str | None):
+    @property
+    def url(self) -> str:
 
-        self.destination = destination or self.param('destination')
+        return self.desc.url + ('' if self.post else f'?{self.qs}')
 
-
-    def open_dest(self):
-
-        if dest := self.destination:
-            self._destination = open(dest, 'wb')
-
-        else:
-            self._destination = io.BytesIO()
-
-    def param(self, key: str) -> Any:
-
-        return self.desc[key]
 
     def close_dest(self):
 
@@ -87,44 +74,68 @@ class AbstractDownloader(abc.ABC):
 
             self._destination.close()
 
-    def __del__(self):
 
-        self.close_dest()
+    def ok(self) -> bool:
 
-    @property
-    def url(self) -> str:
+        return getattr(self, 'success', False)
 
-        return self.desc.url + ('' if self.post else f'?{self.qs}')
+
+    def open_dest(self):
+
+        if dest := self.destination:
+            self._destination = open(dest, 'wb')
+
+        else:
+            self._destination = io.BytesIO()
+
+
+    def param(self, key: str) -> Any:
+
+        return self.desc[key]
+
+
+    def set_destination(self, destination: str | None):
+
+        self.destination = destination or self.param('destination')
+
+
+    def setup(self):
+
+        self.init_handler()
+        self.set_options()
+        self.open_dest()
+        self.set_req_headers()
+        self.set_resp_headers()
+
 
     @abc.abstractmethod
     def download(self) -> None:
 
         raise NotImplementedError()
 
+
     @abc.abstractmethod
     def init_handler(self) -> None:
 
         raise NotImplementedError()
+
 
     @abc.abstractmethod
     def set_options(self) -> None:
 
         raise NotImplementedError()
 
+
     @abc.abstractmethod
     def set_req_headers(self) -> None:
 
         raise NotImplementedError()
 
+
     @abc.abstractmethod
     def set_resp_headers(self) -> None:
 
         raise NotImplementedError()
-
-
-    def ok(self) -> bool:
-
-        return getattr(self, 'success', False)
 
 
 class CurlDownloader(AbstractDownloader):
@@ -141,6 +152,11 @@ class CurlDownloader(AbstractDownloader):
         super().__init__(desc, destination)
 
 
+    def init_handler(self):
+
+        self.handler = pycurl.Curl()
+
+
     def download(self):
 
         self.handler.perform()
@@ -149,9 +165,11 @@ class CurlDownloader(AbstractDownloader):
         self.close_dest()
 
 
-    def init_handler(self):
+    def open_dest(self):
 
-        self.handler = pycurl.Curl()
+        super().open_dest()
+
+        self.handler.setopt(pycurl.WRITEFUNCTION, self._destination.write)
 
 
     def set_options(self):
@@ -198,13 +216,6 @@ class CurlDownloader(AbstractDownloader):
                 self.handler.setopt(self.handler.POSTFIELDS, data)
 
 
-    def open_dest(self):
-
-        super().open_dest()
-
-        self.handler.setopt(pycurl.WRITEFUNCTION, self._destination.write)
-
-
     def set_req_headers(self):
 
         self.handler.setopt(
@@ -234,6 +245,23 @@ class RequestsDownloader(AbstractDownloader):
     ):
 
         super().__init__(desc, destination)
+
+
+    def download(self):
+
+        req = self.request.prepare()
+
+        with self.session.send(req, **self.send_args) as resp:
+
+            self.response = resp
+            resp.raise_for_status()
+
+            for chunk in resp.iter_content(1024):
+
+                self._destination.write(chunk)
+
+        self._destination.seek(0)
+        self.close_dest()
 
 
     def init_handler(self):
@@ -277,27 +305,10 @@ class RequestsDownloader(AbstractDownloader):
         else:
             self.request.method = 'GET'
 
-        # TODO: Figure out how to add these options in `requests`
+        # TODO: Figure out how to add these options in `requests` (if possible)
         #self.session.verify = self.desc['ssl_verifypeer']
         #if self.desc['ssl_verifypeer'] and self.desc['cainfo_override']:
         #    self.session.verify = self.desc['cainfo_override']
-
-
-    def download(self):
-
-        req = self.request.prepare()
-
-        with self.session.send(req, **self.send_args) as resp:
-
-            self.response = resp
-            resp.raise_for_status()
-
-            for chunk in resp.iter_content(1024):
-
-                self._destination.write(chunk)
-
-        self._destination.seek(0)
-        self.close_dest()
 
 
     def set_req_headers(self):
