@@ -315,11 +315,17 @@ class RequestsDownloader(AbstractDownloader):
 
 
     def set_req_headers(self):
+        """
+        Sets the request headers.
+        """
 
         self.request.headers.update(self.desc.get_headers_dict())
 
 
     def set_resp_headers(self):
+        """
+        Sets the response headers. Not implemented - keeps defaults.
+        """
 
         pass
         #self.resp_headers = self.response.headers
