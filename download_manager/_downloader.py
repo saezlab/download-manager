@@ -60,6 +60,13 @@ class AbstractDownloader(abc.ABC):
 
     @property
     def url(self) -> str:
+        """
+        Returns the full URL (i.e. including the query string in case of a GET
+        request).
+
+        Returns:
+            The full URL as a string.
+        """
 
         return self.desc.url + ('' if self.post else f'?{self.qs}')
 
