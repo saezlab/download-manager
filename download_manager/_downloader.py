@@ -39,7 +39,21 @@ PARAMS = [
 
 class AbstractDownloader(abc.ABC):
     """
-    Single download manager
+    Abstract class for individual download manager.
+
+    Args:
+        desc:
+            Instance of `Descriptor` with the required information to perform a
+            download.
+        destination:
+            Destination directory to download the file resulting from the
+            download. Optional, defaults to `None`.
+
+    Attrs:
+        desc:
+            The instance of the `Descriptor` associated to the download.
+        destintation:
+            The path or buffer of the destination of the download.
     """
 
     def __init__(
@@ -93,6 +107,7 @@ class AbstractDownloader(abc.ABC):
             `True`/`False` depending on the success of the download.
         """
 
+        # TODO: Do we set up the `success` attribute somewhere?
         return getattr(self, 'success', False)
 
 
@@ -193,7 +208,7 @@ class CurlDownloader(AbstractDownloader):
             download.
         destination:
             Destination directory to download the file resulting from the
-            download.
+            download. Optional, defaults to `None`.
 
     Attrs:
         handler:
@@ -327,7 +342,7 @@ class RequestsDownloader(AbstractDownloader):
             download.
         destination:
             Destination directory to download the file resulting from the
-            download.
+            download. Optional, defaults to `None`.
 
     Attrs:
         request:
