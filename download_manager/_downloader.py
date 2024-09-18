@@ -81,6 +81,10 @@ class AbstractDownloader(abc.ABC):
 
 
     def open_dest(self):
+        """
+        Sets up the destination for the download if available, otherwise
+        defaults to buffer in memory.
+        """
 
         if dest := self.destination:
 
