@@ -274,6 +274,10 @@ class RequestsDownloader(AbstractDownloader):
 
 
     def set_options(self):
+        """
+        Sets the options for the `requests`-based download handler inlcuding
+        download methods (get/post) based on the provided `Descriptor` instance.
+        """
 
         self.request.url = self.desc['url']
         self.send_args['allow_redirects'] = self.desc['followlocation']
