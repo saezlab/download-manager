@@ -102,6 +102,10 @@ class AbstractDownloader(abc.ABC):
 
 
     def setup(self):
+        """
+        Sets up the downloader by calling all the set-up methods like
+        initializing the download handler, configuration options, headers, etc.
+        """
 
         self.init_handler()
         self.set_options()
