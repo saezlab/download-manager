@@ -237,7 +237,31 @@ class CurlDownloader(AbstractDownloader):
 
 class RequestsDownloader(AbstractDownloader):
     """
-    Requests download
+    Downloader based on the `requests` package.
+
+    Args:
+        desc:
+            Instance of `Descriptor` with the required information to perform a
+            download.
+        destination:
+            Destination directory to download the file resulting from the
+            download.
+
+    Attrs:
+        request:
+            The instance of `requests.Request` containing the configuration
+            specific to a request.
+        session:
+            An instance of `requests.Session` containing general configuration
+            for the connection session.
+        response:
+            The response resulting from performing the request.
+        send_args:
+            Extra arguments sent alongside the request.
+        desc:
+            Instance of `Descriptor` containing the relevant information to
+            perform the download and configure the donwload handler.
+
     """
 
     def __init__(
@@ -302,7 +326,7 @@ class RequestsDownloader(AbstractDownloader):
                 data = self.desc['multipart']['data']
                 self.request.files = {
                     k: (v, open(v, 'rb'), mimetypes.guess_type(v)[0])
-                    for k, v in self.desc["multipart"]['files'].items()
+                    for k, v in self.desc['multipart']['files'].items()
                 }
 
             else:
