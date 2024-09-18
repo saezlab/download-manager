@@ -219,6 +219,9 @@ class CurlDownloader(AbstractDownloader):
 
 
     def set_req_headers(self):
+        """
+        Sets the request headers.
+        """
 
         self.handler.setopt(
             self.handler.HTTPHEADER,
