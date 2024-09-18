@@ -175,6 +175,10 @@ class CurlDownloader(AbstractDownloader):
 
 
     def set_options(self):
+        """
+        Sets the options for the `curl`-based download handler inlcuding
+        download methods (get/post) based on the provided `Descriptor` instance.
+        """
 
         for param in PARAMS:
 
