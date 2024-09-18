@@ -160,6 +160,11 @@ class CurlDownloader(AbstractDownloader):
 
 
     def download(self):
+        """
+        Performs the actual download and stores the result in the destination
+        based on the information provided on the `Descriptor`.
+
+        """
 
         self.handler.perform()
         self.handler.close()
