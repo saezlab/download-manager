@@ -267,6 +267,9 @@ class RequestsDownloader(AbstractDownloader):
 
 
     def init_handler(self):
+        """
+        Initializes the `requests`-based donwload handler and session.
+        """
 
         self.session = requests.Session()
         self.request = requests.Request()
