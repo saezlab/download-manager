@@ -65,6 +65,9 @@ class AbstractDownloader(abc.ABC):
 
 
     def close_dest(self):
+        """
+        Closes the destination writing function.
+        """
 
         if (
             hasattr(self, '_destination')
