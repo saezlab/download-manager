@@ -76,6 +76,12 @@ class AbstractDownloader(abc.ABC):
 
 
     def ok(self) -> bool:
+        """
+        Checks whether the download was successful.
+
+        Returns:
+            `True`/`False` depending on the success of the download.
+        """
 
         return getattr(self, 'success', False)
 
