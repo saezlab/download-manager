@@ -97,6 +97,14 @@ class AbstractDownloader(abc.ABC):
 
 
     def set_destination(self, destination: str | None):
+        """
+        Sets up the download destination property based on the given path,
+        otherwise, takes it from the `Descriptor` instance.
+
+        Args:
+            destination:
+                Path to the directory where the download should be performed.
+        """
 
         self.destination = destination or self.param('destination')
 
