@@ -168,6 +168,9 @@ class CurlDownloader(AbstractDownloader):
 
 
     def open_dest(self):
+        """
+        Provides the `curl`-based handler with the destination for the download.
+        """
 
         super().open_dest()
 
