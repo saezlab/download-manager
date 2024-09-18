@@ -142,7 +142,25 @@ class AbstractDownloader(abc.ABC):
 
 class CurlDownloader(AbstractDownloader):
     """
-    Curl download
+    Downloader based on the `pycurl` package.
+
+    Args:
+        desc:
+            Instance of `Descriptor` with the required information to perform a
+            download.
+        destination:
+            Destination directory to download the file resulting from the
+            download.
+
+    Attrs:
+        handler:
+            The instance of `pycurl.Curl` containing the configuration required
+            for performing the download.
+        resp_headers:
+            The response headers after performing the download request.
+        desc:
+            Instance of `Descriptor` containing the relevant information to
+            perform the download and configure the donwload handler.
     """
 
     def __init__(
@@ -282,7 +300,6 @@ class RequestsDownloader(AbstractDownloader):
         desc:
             Instance of `Descriptor` containing the relevant information to
             perform the download and configure the donwload handler.
-
     """
 
     def __init__(
