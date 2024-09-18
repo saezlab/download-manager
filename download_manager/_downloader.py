@@ -227,6 +227,9 @@ class CurlDownloader(AbstractDownloader):
 
 
     def set_resp_headers(self):
+        """
+        Sets the response headers.
+        """
 
         self.resp_headers = []
         self.handler.setopt(
