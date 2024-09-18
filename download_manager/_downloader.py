@@ -155,6 +155,9 @@ class CurlDownloader(AbstractDownloader):
 
 
     def init_handler(self):
+        """
+        Initializes the `curl`-based donwload handler.
+        """
 
         self.handler = pycurl.Curl()
 
