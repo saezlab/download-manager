@@ -92,6 +92,17 @@ class AbstractDownloader(abc.ABC):
 
 
     def param(self, key: str) -> Any:
+        """
+        Wrapper function that retrieves a requested parameter from the
+        descriptor associated to the downloader instance.
+
+        Args:
+            key:
+                Name of the parameter from the `Descriptor` to retrieve.
+
+        Returns:
+            The value of the requested parameter in the `Descriptor`.
+        """
 
         return self.desc[key]
 
