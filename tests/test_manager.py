@@ -106,13 +106,9 @@ def test_timestamps(http_url, download_dir):
     )
 
     item = item._from_main()
-    print(datetime.now(timezone.utc))
-    print(dateutil.parser.parse(item.date))
-    print(item.date)
-    print(datetime.now())
 
     assert datetime.now() - dateutil.parser.parse(item.date) < timedelta(seconds=10)
     assert datetime.now() - dateutil.parser.parse(item.attrs['download_started']) < timedelta(seconds=10)
     assert datetime.now() - dateutil.parser.parse(item.attrs['download_finished']) < timedelta(seconds=10)
     assert datetime.now() - dateutil.parser.parse(item.last_read) < timedelta(seconds=10)
-    assert item.status == cm.Status.READY.value
+    assert item.status == cm._status.Status.READY.value
