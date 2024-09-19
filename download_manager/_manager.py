@@ -301,6 +301,8 @@ class DownloadManager:
         if item:
 
             item.status = Status.WRITE.value
+            item.update_date('download_started')
+            item.update_date()
 
 
     def _report_finished(
@@ -316,3 +318,6 @@ class DownloadManager:
                     if downloader.ok else
                 Status.FAILED.value
             )
+            item.update_date('download_finished')
+            item.accessed()
+            item.update_date()
