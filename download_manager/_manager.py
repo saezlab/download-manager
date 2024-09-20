@@ -250,6 +250,37 @@ class DownloadManager:
             return item
 
 
+    def _report_finished(
+        self,
+        item: cm.CacheItem,
+        downloader: cm.Downloader.AbstractDownloader
+    ):
+        """
+        """
+
+        if item:
+
+            item.status = (
+                Status.READY.value
+                    if downloader.ok else
+                Status.FAILED.value
+            )
+            item.update_date('download_finished')
+            item.accessed()
+            item.update_date()
+
+
+    def _report_started(self, item: cm.CacheItem):
+        """
+        """
+
+        if item:
+
+            item.status = Status.WRITE.value
+            item.update_date('download_started')
+            item.update_date()
+
+
     def _set_cache(self, path: str | None, pkg: str | None = None):
         """
         Initializes the cache manager interface if a path or package name given.
@@ -295,30 +326,3 @@ class DownloadManager:
         config = config or {}
         config.update(kwargs)
         self.config = config
-
-
-    def _report_started(self, item: cm.CacheItem) -> None:
-
-        if item:
-
-            item.status = Status.WRITE.value
-            item.update_date('download_started')
-            item.update_date()
-
-
-    def _report_finished(
-        self,
-        item: cm.CacheItem,
-        downloader: cm.Downloader.AbstractDownloader
-    ) -> None:
-
-        if item:
-
-            item.status = (
-                Status.READY.value
-                    if downloader.ok else
-                Status.FAILED.value
-            )
-            item.update_date('download_finished')
-            item.accessed()
-            item.update_date()
