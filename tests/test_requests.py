@@ -106,3 +106,20 @@ def test_multipart(http_url, download_dir):
 
     assert content['form'] == data_str
     assert content['files'] == {'file': 'Something'}
+
+
+def test_resp_headers(http_url, download_dir):
+
+    query = {'resp_headers': 'resp_request'}
+    resptest = dm.DownloadManager(download_dir)
+    dltest = resptest._download(http_url, query=query)
+    header_key = 'Content-Type'
+    header_value = 'text/html; charset=utf-8'
+
+    assert dltest[2] is not None
+
+    header_dict = dltest[2].resp_headers
+
+    assert len(header_dict) > 0
+    assert header_key in header_dict
+    assert header_value == header_dict[header_key]
