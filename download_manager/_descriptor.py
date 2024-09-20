@@ -148,7 +148,7 @@ class Descriptor(abc.Mapping):
             A list with the headers as byte-strings.
         """
 
-        return self['headers'] = [
+        return [
             s.encode('ascii')
             if hasattr(s, 'encode') else s
             for s in self['headers']
