@@ -96,7 +96,7 @@ def test_cache_desc_reconstitution(http_url, download_dir):
 
 
 def test_timestamps(http_url, download_dir):
-    
+
     query = {'updatefoo': 'updatebar'}
     manager = dm.DownloadManager(path=download_dir)
     desc, item, dest = manager._download(
@@ -112,3 +112,22 @@ def test_timestamps(http_url, download_dir):
     assert datetime.now() - dateutil.parser.parse(item.attrs['download_finished']) < timedelta(seconds=10)
     assert datetime.now() - dateutil.parser.parse(item.last_read) < timedelta(seconds=10)
     assert item.status == cm._status.Status.READY.value
+
+
+def test_store_req_headers(http_url, download_dir):
+
+    query = {'reqheaders': 'test'}
+    headers = ['X-Test: test']
+    manager = dm.DownloadManager(path=download_dir)
+    desc, item, dest = manager._download(
+        http_url,
+        query=query,
+        headers=headers,
+    )
+
+    item = manager.cache.best_or_new(
+        http_url,
+        params = {'query': query, 'headers': headers},
+    )
+
+    assert item.params['headers'] == headers

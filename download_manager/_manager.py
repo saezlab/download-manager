@@ -21,6 +21,7 @@ DL_ATTRS = {
     'post',
     'json',
     'multipart',
+    'headers',
 }
 
 
