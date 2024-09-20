@@ -458,5 +458,4 @@ class RequestsDownloader(AbstractDownloader):
         Sets the response headers. Not implemented - keeps defaults.
         """
 
-        pass
-        #self.resp_headers = self.response.headers
+        self.resp_headers = self.response.headers
