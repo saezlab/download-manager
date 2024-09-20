@@ -281,7 +281,7 @@ class CurlDownloader(AbstractDownloader):
             if self.desc['multipart']:
 
                 self.desc['headers'].append(
-                    b'Content-Type: multipart/form-data'
+                    'Content-Type: multipart/form-data'
                 )
 
                 self.handler.setopt(

@@ -89,7 +89,7 @@ class Descriptor(abc.Mapping):
         self._param.update(_data._module_data(fname))
 
 
-    def get_headers_dict(self) -> dict:
+    def headers_dict(self) -> dict:
         """
         Returns the request headers as a dictionary.
 
@@ -98,10 +98,7 @@ class Descriptor(abc.Mapping):
             name/value respectively.
         """
 
-        return dict(
-            elem.decode().split(': ', maxsplit=1)
-            for elem in self['headers']
-        )
+        return dict(elem.split(': ', maxsplit=1) for elem in self['headers'])
 
 
     def set_get_post(self):
@@ -138,16 +135,24 @@ class Descriptor(abc.Mapping):
 
         hdr = misc.to_list(hdr)
 
-        self['headers'] = [
-            s.encode('ascii')
-            if hasattr(s, 'encode')
-            else s
-            for s in hdr
-        ]
-
         if self['json']:
 
-            self['headers'].append(b'Content-Type: application/json')
+            self['headers'].append('Content-Type: application/json')
+
+
+    def headers_bytes(self) -> dict:
+        """
+        Returns the request headers as bytes.
+
+        Returns:
+            A list with the headers as byte-strings.
+        """
+
+        return self['headers'] = [
+            s.encode('ascii')
+            if hasattr(s, 'encode') else s
+            for s in self['headers']
+        ]
 
 
     def set_multipart(self):
