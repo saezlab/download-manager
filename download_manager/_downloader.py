@@ -198,8 +198,13 @@ class AbstractDownloader(abc.ABC):
         self.resp_headers = []
 
 
-    @abc.abstractmethod
     def post_download(self) -> None:
+
+        self.parse_resp_headers()
+
+
+    @abc.abstractmethod
+    def parse_resp_headers(self) -> None:
 
         raise NotImplementedError()
 
@@ -339,9 +344,15 @@ class CurlDownloader(AbstractDownloader):
         )
 
 
-    def post_download(self) -> None:
+    def parse_resp_headers(self) -> None:
 
-        pass
+        if isinstance(self.resp_headers, list):
+
+            self.resp_headers = dict(
+                (h.decode('utf-8').strip('\r\n').split(': ', 1) + [None])[:2]
+                for h in self.resp_headers
+
+            )
 
 
 class RequestsDownloader(AbstractDownloader):
@@ -471,6 +482,6 @@ class RequestsDownloader(AbstractDownloader):
         super().set_resp_headers()
 
 
-    def post_download(self) -> None:
+    def parse_resp_headers(self) -> None:
 
         self.resp_headers = self.response.headers
