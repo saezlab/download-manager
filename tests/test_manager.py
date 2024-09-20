@@ -78,7 +78,7 @@ def test_cache_desc_reconstitution(http_url, download_dir):
 
     query = {'foo2': 'bar'}
     manager = dm.DownloadManager(path=download_dir)
-    desc, item, dest, downloader = manager._download(
+    desc, item, *_ = manager._download(
         http_url,
         query=query,
         timeout=5,
@@ -90,7 +90,7 @@ def test_cache_desc_reconstitution(http_url, download_dir):
 
     assert dict(desc_recon) == dict(desc)
 
-    desc_recon2, item2, dest2 = manager._download(desc_recon)
+    desc_recon2, *_ = manager._download(desc_recon)
 
     assert dict(desc_recon2) == dict(desc)
 
@@ -99,7 +99,7 @@ def test_timestamps(http_url, download_dir):
 
     query = {'updatefoo': 'updatebar'}
     manager = dm.DownloadManager(path=download_dir)
-    desc, item, dest, downloader = manager._download(
+    desc, item, *_ = manager._download(
         http_url,
         query=query,
         timeout=5,
@@ -119,7 +119,7 @@ def test_store_req_headers(http_url, download_dir):
     query = {'reqheaders': 'test'}
     headers = ['X-Test: test']
     manager = dm.DownloadManager(path=download_dir)
-    desc, item, dest, downloader = manager._download(
+    _ = manager._download(
         http_url,
         query=query,
         headers=headers,

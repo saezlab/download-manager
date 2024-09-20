@@ -203,7 +203,7 @@ class DownloadManager:
 
                 dest = downloader._destination
 
-        return desc, item, dest, downloader
+        return desc, item, downloader, dest
 
 
     def _get_cache_item(
