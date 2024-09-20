@@ -195,6 +195,12 @@ class AbstractDownloader(abc.ABC):
     @abc.abstractmethod
     def set_resp_headers(self) -> None:
 
+        self.resp_headers = []
+
+
+    @abc.abstractmethod
+    def post_download(self) -> None:
+
         raise NotImplementedError()
 
 
@@ -249,6 +255,7 @@ class CurlDownloader(AbstractDownloader):
         self.handler.close()
         self._destination.seek(0)
         self.close_dest()
+        self.post_download()
 
 
     def open_dest(self):
@@ -325,11 +332,16 @@ class CurlDownloader(AbstractDownloader):
         Sets the response headers.
         """
 
-        self.resp_headers = []
+        super().set_resp_headers()
         self.handler.setopt(
             self.handler.HEADERFUNCTION,
             self.resp_headers.append,
         )
+
+
+    def post_download(self) -> None:
+
+        pass
 
 
 class RequestsDownloader(AbstractDownloader):
@@ -388,6 +400,7 @@ class RequestsDownloader(AbstractDownloader):
 
         self._destination.seek(0)
         self.close_dest()
+        self.post_download()
 
 
     def init_handler(self):
@@ -453,9 +466,11 @@ class RequestsDownloader(AbstractDownloader):
         self.request.headers.update(self.desc.headers_dict)
 
 
-    def set_resp_headers(self):
-        """
-        Sets the response headers. Not implemented - keeps defaults.
-        """
+    def set_resp_headers(self) -> None:
+
+        super().set_resp_headers()
+
+
+    def post_download(self) -> None:
 
         self.resp_headers = self.response.headers
