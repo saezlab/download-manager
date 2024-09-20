@@ -89,6 +89,7 @@ class Descriptor(abc.Mapping):
         self._param.update(_data._module_data(fname))
 
 
+    @property
     def headers_dict(self) -> dict:
         """
         Returns the request headers as a dictionary.
@@ -137,9 +138,12 @@ class Descriptor(abc.Mapping):
 
         if self['json']:
 
-            self['headers'].append('Content-Type: application/json')
+            hdr.append('Content-Type: application/json')
+
+        self['headers'] = hdr
 
 
+    @property
     def headers_bytes(self) -> dict:
         """
         Returns the request headers as bytes.
@@ -151,7 +155,7 @@ class Descriptor(abc.Mapping):
         return [
             s.encode('ascii')
             if hasattr(s, 'encode') else s
-            for s in self['headers']
+            for s in self['headers'] or []
         ]
 
 
