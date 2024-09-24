@@ -143,7 +143,7 @@ def test_store_resp_header(http_url, download_dir):
 
     item = manager.cache.best_or_new(
         http_url,
-        params={'query': query},
+        params={'dl_params': {'query': query, 'headers': []}},
     )
 
     assert 'Content-Type' in item.attrs['resp_headers']
