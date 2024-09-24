@@ -238,7 +238,7 @@ class DownloadManager:
             desc_params = dict(desc)
 
             item = self.cache.best_or_new(
-                uri = desc['url'],
+                uri = desc['baseurl'],
                 params = {_constants.DL_PARAMS_KEY: dl_params},
                 attrs = {_constants.DL_DESC_KEY: desc_params},
                 older_than = older_than,
