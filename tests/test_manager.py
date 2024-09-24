@@ -146,4 +146,8 @@ def test_store_resp_header(http_url, download_dir):
         params={'query': query},
     )
 
-    assert item.attrs['resp_headers'] == None
+    assert 'Content-Type' in item.attrs['resp_headers']
+    assert (
+        item.attrs['resp_headers']['Content-Type'] ==
+        'text/html; charset=utf-8'
+    )
