@@ -484,4 +484,4 @@ class RequestsDownloader(AbstractDownloader):
 
     def parse_resp_headers(self) -> None:
 
-        self.resp_headers = self.response.headers
+        self.resp_headers = dict(self.response.headers)
