@@ -276,6 +276,11 @@ class DownloadManager:
             item.update_date('download_finished')
             item.accessed()
             item.update_date()
+            item.update(
+                attrs = {
+                    "resp_headers": downloader.resp_headers
+                }
+            )
 
 
     def _report_started(self, item: cm.CacheItem):

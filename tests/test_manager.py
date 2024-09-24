@@ -131,3 +131,19 @@ def test_store_req_headers(http_url, download_dir):
     )
 
     assert item.params['headers'] == headers
+
+def test_store_resp_header(http_url, download_dir):
+
+    query = {'resp_headers': 'test'}
+    manager = dm.DownloadManager(path=download_dir)
+    _ = manager._download(
+        http_url,
+        query=query,
+    )
+
+    item = manager.cache.best_or_new(
+        http_url,
+        params={'query': query},
+    )
+
+    assert item.attrs['resp_headers'] == None
