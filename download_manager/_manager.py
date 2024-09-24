@@ -256,6 +256,14 @@ class DownloadManager:
         downloader: cm.Downloader.AbstractDownloader
     ):
         """
+        Updates the cache entry relevant entries when a download has
+        successfully been performed.
+
+        Args:
+            item:
+                The instance of the cache item to report as finished.
+            downloader:
+                The instance of the downloader.
         """
 
         if item:
@@ -272,6 +280,7 @@ class DownloadManager:
 
     def _report_started(self, item: cm.CacheItem):
         """
+
         """
 
         if item:
