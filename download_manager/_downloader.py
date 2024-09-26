@@ -11,6 +11,7 @@ from typing import Any
 import io
 import os
 import abc
+import re
 import urllib
 import json
 import mimetypes
@@ -71,6 +72,13 @@ class AbstractDownloader(abc.ABC):
 
         self.close_dest()
 
+    @property
+    def filename(self) -> str:
+
+        if self.resp_headers:
+
+            aux = self.resp_headers.get('Content-Disposition', '')
+            re.match('filename="([^"]+)"', aux)
 
     @property
     def url(self) -> str:
