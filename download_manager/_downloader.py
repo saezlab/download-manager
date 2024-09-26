@@ -13,6 +13,7 @@ import os
 import abc
 import re
 import urllib
+import urllib.parse as urlparse
 import json
 import mimetypes
 
@@ -73,12 +74,20 @@ class AbstractDownloader(abc.ABC):
         self.close_dest()
 
     @property
-    def filename(self) -> str:
+    def filename(self) -> str | None:
 
-        if self.resp_headers:
+        fname = os.path.basename(urlparse.urlparse(self.desc.url).path) or None
+
+        if isinstance(self.resp_headers, dict):
 
             aux = self.resp_headers.get('Content-Disposition', '')
-            re.match('filename="([^"]+)"', aux)
+
+            if m := re.match('filename="([^"]+)"', aux):
+
+                fname = m.group(1)
+
+        return fname
+
 
     @property
     def url(self) -> str:

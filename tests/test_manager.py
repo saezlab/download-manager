@@ -132,6 +132,7 @@ def test_store_req_headers(http_url, download_dir):
 
     assert item.params['headers'] == headers
 
+
 def test_store_resp_header(http_url, download_dir):
 
     query = {'resp_headers': 'test'}
