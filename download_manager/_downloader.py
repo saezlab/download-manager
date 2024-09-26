@@ -76,7 +76,7 @@ class AbstractDownloader(abc.ABC):
     @property
     def filename(self) -> str | None:
 
-        fname = os.path.basename(urlparse.urlparse(self.desc.url).path) or None
+        fname = os.path.basename(urlparse.urlparse(self.desc['url']).path) or None
 
         if isinstance(self.resp_headers, dict):
 
