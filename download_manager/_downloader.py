@@ -84,11 +84,11 @@ class AbstractDownloader(abc.ABC):
 
         if isinstance(self.resp_headers, dict):
 
-            aux = self.resp_headers.get('Content-Disposition', '')
-
-            if m := re.match('filename="([^"]+)"', aux):
-
-                fname = m.group(1)
+            fname = (
+                self.resp_headers.
+                get('Content-Disposition', {}).
+                get('filename', fname)
+            )
 
         return fname
 
@@ -224,16 +224,22 @@ class AbstractDownloader(abc.ABC):
         self.parse_resp_headers()
 
 
-    @abc.abstractmethod
     def parse_resp_headers(self) -> None:
 
-        raise NotImplementedError()
+        self.resp_headers.update({
+            key: self.parse_subheader(self.resp_headers.get(key, ''))
+            for key in ('Content-Disposition')
+        })
 
 
     @staticmethod
-    def parse_subheader(self, header: str) -> dict:
+    def parse_subheader(header: str) -> dict:
 
-        return parse_header(header) or {}
+        return (
+            header
+                if isinstance(header, dict) else
+            parse_header(header) or {}
+        )
 
 
 class CurlDownloader(AbstractDownloader):
@@ -381,6 +387,8 @@ class CurlDownloader(AbstractDownloader):
 
             )
 
+        super().parse_resp_headers()
+
 
 class RequestsDownloader(AbstractDownloader):
     """
@@ -512,3 +520,6 @@ class RequestsDownloader(AbstractDownloader):
     def parse_resp_headers(self) -> None:
 
         self.resp_headers = dict(self.response.headers)
+        print(self.resp_headers)
+        super().parse_resp_headers()
+        print(self.resp_headers)
