@@ -520,6 +520,4 @@ class RequestsDownloader(AbstractDownloader):
     def parse_resp_headers(self) -> None:
 
         self.resp_headers = dict(self.response.headers)
-        print(self.resp_headers)
         super().parse_resp_headers()
-        print(self.resp_headers)
