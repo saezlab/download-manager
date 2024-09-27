@@ -16,6 +16,7 @@ import urllib
 import urllib.parse as urlparse
 import json
 import mimetypes
+from cgi import parse_header
 
 import pycurl
 import requests
@@ -76,7 +77,10 @@ class AbstractDownloader(abc.ABC):
     @property
     def filename(self) -> str | None:
 
-        fname = os.path.basename(urlparse.urlparse(self.desc['url']).path) or None
+        fname = (
+            os.path.basename(urlparse.urlparse(self.desc['url']).path)
+            or None
+        )
 
         if isinstance(self.resp_headers, dict):
 
@@ -224,6 +228,12 @@ class AbstractDownloader(abc.ABC):
     def parse_resp_headers(self) -> None:
 
         raise NotImplementedError()
+
+
+    @staticmethod
+    def parse_subheader(self, header: str) -> dict:
+
+        return parse_header(header) or {}
 
 
 class CurlDownloader(AbstractDownloader):
