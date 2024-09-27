@@ -227,8 +227,8 @@ class AbstractDownloader(abc.ABC):
     def parse_resp_headers(self) -> None:
 
         self.resp_headers.update({
-            key: self.parse_subheader(self.resp_headers.get(key, ''))
-            for key in ('Content-Disposition')
+            key: self.parse_subheader(self.resp_headers.get(key, ''))[1]
+            for key in ['Content-Disposition', ]
         })
 
 
