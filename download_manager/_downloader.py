@@ -241,6 +241,10 @@ class AbstractDownloader(abc.ABC):
             parse_header(header) or {}
         )
 
+    def size(self) -> int | None:
+
+        return self.item.size
+
 
 class CurlDownloader(AbstractDownloader):
     """
@@ -521,8 +525,3 @@ class RequestsDownloader(AbstractDownloader):
 
         self.resp_headers = dict(self.response.headers)
         super().parse_resp_headers()
-
-
-    def size(self) -> int | None:
-
-        return self.item.size
