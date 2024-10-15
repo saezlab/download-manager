@@ -187,6 +187,7 @@ class AbstractDownloader(abc.ABC):
         self.open_dest()
         self.set_req_headers()
         self.set_resp_headers()
+        self.set_progress()
 
 
     @abc.abstractmethod
@@ -209,6 +210,12 @@ class AbstractDownloader(abc.ABC):
 
     @abc.abstractmethod
     def set_req_headers(self) -> None:
+
+        raise NotImplementedError()
+
+
+    @abc.abstractmethod
+    def set_progress(self) -> None:
 
         raise NotImplementedError()
 
@@ -280,12 +287,21 @@ class CurlDownloader(AbstractDownloader):
     """
 
     def __init__(
-            self,
-            desc: _descriptor.Descriptor,
-            destination: str | None = None,
+        self,
+        desc: _descriptor.Descriptor,
+        destination: str | None = None,
     ):
 
         super().__init__(desc, destination)
+
+
+    def _progress(self,
+        download_total,
+        downloaded,
+        upload_total,
+        uploaded
+    ):
+        pass
 
 
     def init_handler(self):
@@ -319,6 +335,12 @@ class CurlDownloader(AbstractDownloader):
 
         self.handler.setopt(pycurl.WRITEFUNCTION, self._destination.write)
 
+
+    def set_progress(self):
+
+        self.handler.setopt(pycurl.XFERINFOFUNCTION, self._progress)
+        self.handler.setopt(pycurl.PROGRESSFUNCTION, self._progress)
+        self.handler.setopt(pycurl.NOPROGRESS, 0)
 
     def set_options(self):
         """
