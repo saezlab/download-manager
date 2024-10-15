@@ -241,9 +241,19 @@ class AbstractDownloader(abc.ABC):
             parse_header(header) or {}
         )
 
+    @property
     def size(self) -> int | None:
 
-        return self.item.size
+        if (
+            (path := getattr(self._destination, 'name', None)) and
+            os.path.exists(path)
+        ):
+
+            return os.path.getsize(path)
+
+        else:
+
+            return len(self._destination.getbuffer())
 
 
 class CurlDownloader(AbstractDownloader):
