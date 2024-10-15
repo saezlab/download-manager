@@ -482,10 +482,12 @@ class RequestsDownloader(AbstractDownloader):
 
             self.response = resp
             resp.raise_for_status()
+            self._expected_size = int(resp.headers.get('Content-Length', 0))
 
             for chunk in resp.iter_content(1024):
 
                 self._destination.write(chunk)
+                self._downloaded =+ len(chunk)
 
         self._destination.seek(0)
         self.close_dest()
