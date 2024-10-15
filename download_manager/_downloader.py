@@ -66,6 +66,8 @@ class AbstractDownloader(abc.ABC):
     ):
         super().__init__()
         self.desc = desc
+        self._downloaded = 0
+        self._expected_size = 0
         self.set_destination(destination)
         self.setup()
 
@@ -217,7 +219,8 @@ class AbstractDownloader(abc.ABC):
     @abc.abstractmethod
     def set_progress(self) -> None:
 
-        raise NotImplementedError()
+        self._downloaded = 0
+        self._expected_size = 0
 
 
     @abc.abstractmethod
@@ -295,13 +298,16 @@ class CurlDownloader(AbstractDownloader):
         super().__init__(desc, destination)
 
 
-    def _progress(self,
-        download_total,
-        downloaded,
-        upload_total,
-        uploaded
-    ):
-        pass
+    def _progress(
+        self,
+        download_total: int,
+        downloaded: int,
+        upload_total: int,
+        uploaded: int,
+    ) -> None:
+
+        self._downloaded = downloaded
+        self._expected_size = download_total
 
 
     def init_handler(self):
@@ -338,6 +344,7 @@ class CurlDownloader(AbstractDownloader):
 
     def set_progress(self):
 
+        super().set_progress()
         self.handler.setopt(pycurl.XFERINFOFUNCTION, self._progress)
         self.handler.setopt(pycurl.PROGRESSFUNCTION, self._progress)
         self.handler.setopt(pycurl.NOPROGRESS, 0)
