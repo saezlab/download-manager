@@ -287,7 +287,7 @@ class DownloadManager:
 
                 args['file_name'] = downloader.filename
 
-            args['attrs']['sha256sum'] = downloader.sha256sum
+            args['attrs']['sha256'] = downloader.sha256
             args['attrs']['size'] = downloader.size
 
             item.update(**args)

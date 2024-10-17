@@ -36,3 +36,12 @@ def test_filename_contdispos(http_url):
     d = man._download(url)
 
     assert d[2].filename == 'test.json'
+
+
+def test_size(http_url):
+
+    url = f'{http_url}/robots.txt?foobar=hello'
+    man = dm.DownloadManager()
+    d = man._download(url, dest = False)
+
+    assert d[2].size > 0
