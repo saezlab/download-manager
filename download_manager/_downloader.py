@@ -97,19 +97,24 @@ class AbstractDownloader(abc.ABC):
 
 
     @property
+    def sha256(self) -> str | None:
+
+        return self.checksum()
+
+
     def checksum(self, digest: str = 'sha256') -> str | None:
 
         if self.ok():
 
             if self.path and os.path.exists(self.path):
 
-                h = hashlib.file_digest(self.path, digest=digest)
+                h = hashlib.file_digest(self.path, digest)
 
             else:
 
                 h = hashlib.new(digest)
                 h.update(self._destination.getvalue())
-            
+
             return h.hexdigest()
 
 
@@ -271,7 +276,7 @@ class AbstractDownloader(abc.ABC):
 
     @property
     def path(self):
-        
+
         getattr(self._destination, 'name', None)
 
 
