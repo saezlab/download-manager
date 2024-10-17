@@ -162,6 +162,11 @@ class DownloadManager:
         item = None
         downloader = None
 
+        # When no path is provided and there's no cache, default to buffer
+        if self.cache is None and dest is None:
+
+            dest = False
+
         # Retrieve/create item from/in cache
         # If dest is not str and not False
         if not isinstance(dest, str) and (dest is True or dest is None):
