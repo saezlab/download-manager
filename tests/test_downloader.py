@@ -40,6 +40,7 @@ def test_filename_contdispos_disk(http_url, download_dir):
 
     assert d[2].filename == 'test.json'
     assert os.path.exists(d[3])
+    #assert d[3].endswith('.json') # TODO: should update filename in cache after download
 
 
 def test_size(http_url):
