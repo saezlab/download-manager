@@ -254,6 +254,10 @@ class AbstractDownloader(abc.ABC):
     @property
     def size(self) -> int | None:
 
+        if not self.ok() and (epx := getattr(self, '_expected_size', 0)):
+
+            return epx
+
         if (
             (path := getattr(self._destination, 'name', None)) and
             os.path.exists(path)
