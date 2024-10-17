@@ -16,6 +16,7 @@ import urllib
 import urllib.parse as urlparse
 import json
 import mimetypes
+import hashlib
 from cgi import parse_header
 
 import pycurl
@@ -93,6 +94,23 @@ class AbstractDownloader(abc.ABC):
             )
 
         return fname
+
+
+    @property
+    def checksum(self, digest: str = 'sha256') -> str | None:
+
+        if self.ok():
+
+            if self.path and os.path.exists(self.path):
+
+                h = hashlib.file_digest(self.path, digest=digest)
+
+            else:
+
+                h = hashlib.new(digest)
+                h.update(self._destination.getvalue())
+            
+            return h.hexdigest()
 
 
     @property
@@ -251,6 +269,13 @@ class AbstractDownloader(abc.ABC):
             parse_header(header) or {}
         )
 
+
+    @property
+    def path(self):
+        
+        getattr(self._destination, 'name', None)
+
+
     @property
     def size(self) -> int | None:
 
@@ -258,10 +283,7 @@ class AbstractDownloader(abc.ABC):
 
             return epx
 
-        if (
-            (path := getattr(self._destination, 'name', None)) and
-            os.path.exists(path)
-        ):
+        if (path := self.path) and os.path.exists(path):
 
             return os.path.getsize(path)
 
