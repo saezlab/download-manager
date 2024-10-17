@@ -234,7 +234,6 @@ class AbstractDownloader(abc.ABC):
         raise NotImplementedError()
 
 
-    @abc.abstractmethod
     def set_progress(self) -> None:
 
         self._downloaded = 0
@@ -374,6 +373,7 @@ class CurlDownloader(AbstractDownloader):
         self.handler.setopt(pycurl.XFERINFOFUNCTION, self._progress)
         self.handler.setopt(pycurl.PROGRESSFUNCTION, self._progress)
         self.handler.setopt(pycurl.NOPROGRESS, 0)
+
 
     def set_options(self):
         """
