@@ -69,6 +69,7 @@ class AbstractDownloader(abc.ABC):
         self.desc = desc
         self._downloaded = 0
         self._expected_size = 0
+        self.status_code = 0
         self.set_destination(destination)
         self.setup()
 
@@ -154,7 +155,25 @@ class AbstractDownloader(abc.ABC):
         """
 
         # TODO: Do we set up the `success` attribute somewhere?
-        return getattr(self, 'success', False)
+        return self.success and (self.path_exists or self.to_buffer)
+
+
+    @property
+    def success(self) -> bool:
+
+        return self.status_code == 200
+
+
+    @property
+    def path_exists(self) -> bool:
+
+        return self.path and os.path.exists(self.path)
+
+
+    @property
+    def to_buffer(self) -> bool:
+
+        return isinstance(self._destination, io.BytesIO)
 
 
     def open_dest(self):
@@ -465,6 +484,11 @@ class CurlDownloader(AbstractDownloader):
         super().parse_resp_headers()
 
 
+    def get_status_code(self) -> None:
+
+        self.status_code = self.handler.getinfo(self.handler.HTTP_CODE)
+
+
 class RequestsDownloader(AbstractDownloader):
     """
     Downloader based on the `requests` package.
@@ -598,3 +622,8 @@ class RequestsDownloader(AbstractDownloader):
 
         self.resp_headers = dict(self.response.headers)
         super().parse_resp_headers()
+
+
+    def get_status_code(self) -> None:
+
+        self.status_code = self.response.status_code
