@@ -292,6 +292,10 @@ class DownloadManager:
 
                 args['file_name'] = downloader.filename
 
+                if ext := os.path.splitext(downloader.filename)[-1]:
+
+                    args['ext'] = ext
+
             args['attrs']['sha256'] = downloader.sha256
             args['attrs']['size'] = downloader.size
 
