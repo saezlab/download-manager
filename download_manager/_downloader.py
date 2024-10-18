@@ -254,6 +254,7 @@ class AbstractDownloader(abc.ABC):
     def post_download(self) -> None:
 
         self.parse_resp_headers()
+        self.get_status_code()
 
 
     def parse_resp_headers(self) -> None:

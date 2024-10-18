@@ -271,7 +271,7 @@ class DownloadManager:
                 The instance of the downloader.
         """
 
-        if item:
+        if item is not None:
 
             item.status = (
                 Status.READY.value
