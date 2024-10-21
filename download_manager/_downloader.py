@@ -147,7 +147,7 @@ class AbstractDownloader(abc.ABC):
 
             self._destination.close()
 
-
+    @property
     def ok(self) -> bool:
         """
         Checks whether the download was successful.
