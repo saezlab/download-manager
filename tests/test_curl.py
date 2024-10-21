@@ -127,12 +127,24 @@ def test_resp_headers(http_url, download_dir):
 
 def test_http_code(http_url):
 
-    dl = dm.CurlDownloader(dm.Descriptor(http_url))
-    dl.setup()
-    dl.download()
+    codes = [200, 404, 500, 300]
 
-    assert dl.status_code == 200
-    assert dl.success
+    for code in codes:
+
+        url = http_url + f'status/{code}' if code != 200 else http_url
+        dl = dm.CurlDownloader(dm.Descriptor(url))
+        dl.setup()
+        dl.download()
+
+        assert dl.status_code == code
+        
+        if code == 200:
+            
+            assert dl.success
+
+        else:
+
+            assert not dl.success
 
 
 def test_property_to_buffer(http_url):

@@ -22,6 +22,7 @@ def https_url():
 
 @pytest.fixture(scope='session')
 def download_dir(tmpdir_factory):
+
     fn = tmpdir_factory.mktemp('test_downloads')
 
     return fn
