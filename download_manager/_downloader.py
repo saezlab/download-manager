@@ -104,6 +104,19 @@ class AbstractDownloader(abc.ABC):
 
 
     def checksum(self, digest: str = 'sha256') -> str | None:
+        """
+        Computes the file checksum (once downloaded). Defaults to SHA256 but
+        other algorithms can be used (e.g. MD5, etc.).
+
+        Args:
+            digest:
+                The algorithm used to compute the checksum. Defaults to
+                `'sha256'`, other options available as implemented in the
+                Python standard library `hashlib`.
+
+        Returns:
+            The resulting file checksum as a string.
+        """
 
         if self.ok:
 
