@@ -378,10 +378,10 @@ class CurlDownloader(AbstractDownloader):
         """
 
         self.handler.perform()
+        self.post_download()
         self.handler.close()
         self._destination.seek(0)
         self.close_dest()
-        self.post_download()
 
 
     def open_dest(self):
