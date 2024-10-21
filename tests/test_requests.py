@@ -123,3 +123,13 @@ def test_resp_headers(http_url, download_dir):
     assert len(header_dict) > 0
     assert header_key in header_dict
     assert header_value == header_dict[header_key]
+
+
+def test_http_code(http_url):
+
+    dl = dm.RequestsDownloader(dm.Descriptor(http_url))
+    dl.setup()
+    dl.download()
+
+    assert dl.status_code == 200
+    assert dl.success
