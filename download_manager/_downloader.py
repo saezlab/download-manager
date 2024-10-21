@@ -109,7 +109,9 @@ class AbstractDownloader(abc.ABC):
 
             if self.path and os.path.exists(self.path):
 
-                h = hashlib.file_digest(self.path, digest)
+                with open(self.path, 'rb') as f:
+
+                    h = hashlib.file_digest(f, digest)
 
             else:
 
@@ -296,8 +298,8 @@ class AbstractDownloader(abc.ABC):
 
     @property
     def path(self):
-
-        getattr(self._destination, 'name', None)
+        
+        return getattr(self._destination, 'name', None)
 
 
     @property
