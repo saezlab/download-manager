@@ -148,6 +148,7 @@ class AbstractDownloader(abc.ABC):
             self._destination.close()
 
 
+    @property
     def ok(self) -> bool:
         """
         Checks whether the download was successful.
@@ -298,7 +299,7 @@ class AbstractDownloader(abc.ABC):
 
     @property
     def path(self):
-        
+
         return getattr(self._destination, 'name', None)
 
 
