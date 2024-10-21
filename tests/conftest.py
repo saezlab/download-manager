@@ -30,12 +30,12 @@ def download_dir(tmpdir_factory):
 
 @pytest.fixture(params=[dm.CurlDownloader, dm.RequestsDownloader])
 def downloader(request):
-    
+
     return request.param
 
 
 @pytest.fixture(params=['curl', 'requests'])
 def d_config(request):
-    
+
     return {'backend': request.param}
 
