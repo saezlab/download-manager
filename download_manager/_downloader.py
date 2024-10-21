@@ -105,7 +105,7 @@ class AbstractDownloader(abc.ABC):
 
     def checksum(self, digest: str = 'sha256') -> str | None:
 
-        if self.ok():
+        if self.ok:
 
             if self.path and os.path.exists(self.path):
 
@@ -306,7 +306,7 @@ class AbstractDownloader(abc.ABC):
     @property
     def size(self) -> int | None:
 
-        if not self.ok() and (epx := getattr(self, '_expected_size', 0)):
+        if not self.ok and (epx := getattr(self, '_expected_size', 0)):
 
             return epx
 
