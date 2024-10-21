@@ -133,3 +133,26 @@ def test_http_code(http_url):
 
     assert dl.status_code == 200
     assert dl.success
+
+
+def test_property_to_buffer(http_url):
+
+    dl = dm.CurlDownloader(dm.Descriptor(http_url), destination = False)
+    dl.setup()
+    dl.download()
+
+    assert dl.to_buffer
+    assert not dl.path_exists
+
+
+def test_property_path_exists(http_url, download_dir):
+
+    path = os.path.join(download_dir, "tempfile.txt")
+
+    dl = dm.CurlDownloader(dm.Descriptor(http_url), destination = path)
+    dl.setup()
+    dl.download()
+
+    assert not dl.to_buffer
+    assert dl.path_exists
+    assert dl.ok

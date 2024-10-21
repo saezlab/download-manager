@@ -147,6 +147,7 @@ class AbstractDownloader(abc.ABC):
 
             self._destination.close()
 
+
     @property
     def ok(self) -> bool:
         """
@@ -298,7 +299,7 @@ class AbstractDownloader(abc.ABC):
 
     @property
     def path(self):
-        
+
         return getattr(self._destination, 'name', None)
 
 
