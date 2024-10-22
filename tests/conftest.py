@@ -20,7 +20,7 @@ def https_url():
     return 'http://omnipathdb.org/'
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def download_dir(tmpdir_factory):
 
     fn = tmpdir_factory.mktemp('test_downloads')
