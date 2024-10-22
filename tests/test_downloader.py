@@ -1,6 +1,10 @@
+import pytest
+
 import os
 import io
 import json
+
+import requests
 
 import download_manager as dm
 
@@ -121,24 +125,34 @@ def test_resp_headers(http_url, download_dir, d_config):
 
 def test_http_code(http_url, downloader):
 
-    codes = [200, 404, 500, 300] # FIXME: error codes raise exception
+    codes = [200, 301, 302, 400, 401, 404, 500]
 
     for code in codes:
 
         url = http_url + f'status/{code}' if code != 200 else http_url
         dl = downloader(dm.Descriptor(url))
         dl.setup()
-        dl.download()
 
-        assert dl.status_code == code
-        
-        if code == 200:
-            
-            assert dl.success
+        if code < 400 or downloader.__name__.startswith('Curl'):
 
+            expected = 200 if code < 400 else code
+            dl.download()
+
+            assert dl.status_code == expected
+
+            if code < 400:
+
+                assert dl.success
+
+            else:
+
+                assert not dl.success
         else:
 
-            assert not dl.success
+            with pytest.raises(requests.exceptions.HTTPError):
+
+                dl.download()
+
 
 
 def test_property_to_buffer(http_url, downloader):
@@ -198,7 +212,7 @@ def test_filename_contdispos_disk(http_url, download_dir, d_config):
 
     # Creating a separate subdir for the different downloaders
     newpath = os.path.join(download_dir, d_config['backend'])
-    
+
     man = dm.DownloadManager(path = newpath, **d_config)
     d = man._download(url)
 
@@ -212,5 +226,5 @@ def test_size(http_url, d_config):
     url = f'{http_url}/robots.txt?foobar=hello'
     man = dm.DownloadManager(**d_config)
     d = man._download(url, dest = False)
-    
+
     assert d[2].size > 0
