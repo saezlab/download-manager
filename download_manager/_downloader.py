@@ -17,6 +17,7 @@ import urllib.parse as urlparse
 import json
 import mimetypes
 import hashlib
+from ._misc import file_digest
 from cgi import parse_header
 
 import pycurl
@@ -111,7 +112,7 @@ class AbstractDownloader(abc.ABC):
 
                 with open(self.path, 'rb') as f:
 
-                    h = hashlib.file_digest(f, digest)
+                    h = file_digest(f, digest)
 
             else:
 
