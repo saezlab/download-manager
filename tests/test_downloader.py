@@ -196,7 +196,10 @@ def test_filename_contdispos_disk(http_url, download_dir, d_config):
         'Content-Disposition=attachment;%20filename%3d%22test.json%22'
     )
 
-    man = dm.DownloadManager(path = download_dir, **d_config)
+    # Creating a separate subdir for the different downloaders
+    newpath = os.path.join(download_dir, d_config['backend'])
+    
+    man = dm.DownloadManager(path = newpath, **d_config)
     d = man._download(url)
 
     assert d[2].filename == 'test.json' # FIXME: Fails in requests :(
@@ -209,5 +212,5 @@ def test_size(http_url, d_config):
     url = f'{http_url}/robots.txt?foobar=hello'
     man = dm.DownloadManager(**d_config)
     d = man._download(url, dest = False)
-
+    
     assert d[2].size > 0
