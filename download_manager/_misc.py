@@ -1,3 +1,5 @@
+import hashlib
+
 __all__ = ['file_digest']
 
 
@@ -19,7 +21,7 @@ def file_digest(fileobj, digest, /, *, _bufsize=2**18):
     # On Linux we could use AF_ALG sockets and sendfile() to archive zero-copy
     # hashing with hardware acceleration.
     if isinstance(digest, str):
-        digestobj = new(digest)
+        digestobj = hashlib.new(digest)
     else:
         digestobj = digest()
 
