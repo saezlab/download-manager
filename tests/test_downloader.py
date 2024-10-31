@@ -210,13 +210,11 @@ def test_filename_contdispos_disk(http_url, download_dir, d_config):
         'Content-Disposition=attachment;%20filename%3d%22test.json%22'
     )
 
-    # Creating a separate subdir for the different downloaders
-    newpath = os.path.join(download_dir, d_config['backend'])
+    man = dm.DownloadManager(path = download_dir, **d_config)
 
-    man = dm.DownloadManager(path = newpath, **d_config)
     d = man._download(url)
 
-    assert d[2].filename == 'test.json' # FIXME: Fails in requests :(
+    assert d[2].filename == 'test.json'
     assert os.path.exists(d[3])
     #assert d[3].endswith('.json') # TODO: should update filename in cache after download
 
