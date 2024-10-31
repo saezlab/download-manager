@@ -195,14 +195,25 @@ class AbstractDownloader(abc.ABC):
         return isinstance(self._destination, io.BytesIO)
 
 
-    def open(self, **kwargs) -> :
+    def open(self, **kwargs) -> str | IO | dict[str, str | IO] | None:
         """
         Open the downloaded file.
+
+        Args:
+            **kwargs:
+                Keyword arguments are passed directly to the `Opener` class.
+
+        Returns:
+            The resulting opened file content. The type of content will depend
+            on the passed arguments. See the `Opener` documentation for more
+            details.
         """
 
         if self.ok and not self.to_buffer:
 
-            _open.Opener(self.path, **kwargs)
+            self.opener = _open.Opener(self.path, **kwargs)
+
+            return self.opener.result
 
 
     def open_dest(self):
