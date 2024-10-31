@@ -18,7 +18,6 @@ import json
 import mimetypes
 import hashlib
 from ._misc import file_digest
-from cgi import parse_header
 
 import pycurl
 import requests
@@ -28,6 +27,7 @@ from cache_manager import _open
 from . import _data
 from . import _curlopt
 from . import _descriptor
+from . import _misc
 
 PARAMS = [
     'ssl_verifypeer',
@@ -331,8 +331,8 @@ class AbstractDownloader(abc.ABC):
     def parse_resp_headers(self) -> None:
 
         self.resp_headers.update({
-            key: self.parse_subheader(self.resp_headers.get(key, ''))[1]
-            for key in ['Content-Disposition', ]
+            key: self.parse_subheader(self.resp_headers.get(key, ''))
+            for key in ['Content-Disposition', 'Content-Type']
         })
 
 
@@ -342,7 +342,7 @@ class AbstractDownloader(abc.ABC):
         return (
             header
                 if isinstance(header, dict) else
-            parse_header(header) or {}
+            _misc.parse_header(header) or {}
         )
 
 
