@@ -23,6 +23,8 @@ from cgi import parse_header
 import pycurl
 import requests
 
+from cache_manager import _open
+
 from . import _data
 from . import _curlopt
 from . import _descriptor
@@ -191,6 +193,16 @@ class AbstractDownloader(abc.ABC):
     def to_buffer(self) -> bool:
 
         return isinstance(self._destination, io.BytesIO)
+
+
+    def open(self, **kwargs) -> :
+        """
+        Open the downloaded file.
+        """
+
+        if self.ok and not self.to_buffer:
+
+            _open.Opener(self.path, **kwargs)
 
 
     def open_dest(self):
