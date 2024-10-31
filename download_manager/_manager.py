@@ -174,6 +174,13 @@ class DownloadManager:
             item = self._get_cache_item(desc, newer_than, older_than)
             dest = item.path
 
+        # Instantiate the downloader (no download yet)
+        backend = self.config.get('backend', 'requests').capitalize()
+        downloader = getattr(_downloader, f'{backend}Downloader')(
+            desc,
+            dest or None,
+        )
+
         # Perform the download
         if (
             # If there's an uninitialized item

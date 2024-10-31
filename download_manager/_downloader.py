@@ -102,6 +102,7 @@ class AbstractDownloader(abc.ABC):
 
     @property
     def ext(self) -> str | None:
+        # TODO: Handle case when downloader gets file from cache
 
         return os.path.splitext(self.filename)[1]
 
