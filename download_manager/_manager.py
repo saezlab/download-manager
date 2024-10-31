@@ -190,15 +190,7 @@ class DownloadManager:
         ):
 
             self._report_started(item)
-
-            backend = self.config.get('backend', 'requests').capitalize()
-            downloader = getattr(_downloader, f'{backend}Downloader')(
-                desc,
-                dest or None,
-            )
-
             downloader.download()
-
             self._report_finished(item, downloader)
 
         # Return destination path/pointer

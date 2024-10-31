@@ -74,7 +74,6 @@ class AbstractDownloader(abc.ABC):
         self._expected_size = 0
         self.status_code = 0
         self.set_destination(destination)
-        self.setup()
 
 
     def __del__(self):
@@ -428,6 +427,7 @@ class CurlDownloader(AbstractDownloader):
 
         """
 
+        self.setup()
         self.handler.perform()
         self.post_download()
         self.handler.close()
@@ -584,6 +584,8 @@ class RequestsDownloader(AbstractDownloader):
         Performs the actual download and stores the result in the destination
         based on the information provided on the `Descriptor`.
         """
+
+        self.setup()
 
         req = self.request.prepare()
 
