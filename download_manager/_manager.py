@@ -292,7 +292,7 @@ class DownloadManager:
 
                 args['file_name'] = downloader.filename
 
-                if ext := os.path.splitext(downloader.filename)[-1]:
+                if ext := downloader.ext:
 
                     args['ext'] = ext
 

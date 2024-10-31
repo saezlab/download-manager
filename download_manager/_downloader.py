@@ -101,6 +101,12 @@ class AbstractDownloader(abc.ABC):
 
 
     @property
+    def ext(self) -> str | None:
+
+        return os.path.splitext(self.filename)[1]
+
+
+    @property
     def sha256(self) -> str | None:
 
         return self.checksum()
@@ -209,11 +215,17 @@ class AbstractDownloader(abc.ABC):
             details.
         """
 
-        if self.ok and not self.to_buffer:
+        if self.ok:
 
-            self.opener = _open.Opener(self.path, **kwargs)
+            if self.to_buffer:
 
-            return self.opener.result
+                return self._destination
+
+            else:
+
+                self.opener = _open.Opener(self.path, **kwargs)
+
+                return self.opener.result
 
 
     def open_dest(self):
