@@ -680,4 +680,4 @@ class RequestsDownloader(AbstractDownloader):
 
     def get_http_code(self) -> None:
 
-        self.http_code = self.response.http_code
+        self.http_code = self.response.status_code
