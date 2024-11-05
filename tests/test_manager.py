@@ -150,5 +150,5 @@ def test_store_resp_header(http_url, download_dir):
     assert 'Content-Type' in item.attrs['resp_headers']
     assert (
         item.attrs['resp_headers']['Content-Type'] ==
-        'text/html; charset=utf-8'
+        {'0': 'text/html', 'charset': 'utf-8'}
     )

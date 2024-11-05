@@ -112,7 +112,7 @@ def test_resp_headers(http_url, download_dir, d_config):
     resptest = dm.DownloadManager(download_dir, **d_config)
     dltest = resptest._download(http_url, query=query)
     header_key = 'Content-Type'
-    header_value = 'text/html; charset=utf-8'
+    header_value = {'0': 'text/html', 'charset': 'utf-8'}
 
     assert dltest[2] is not None
 
