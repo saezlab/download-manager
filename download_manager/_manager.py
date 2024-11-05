@@ -118,6 +118,7 @@ class DownloadManager:
             dest: str | bool | None = None,
             newer_than: str | datetime.datetime | None = None,
             older_than: str | datetime.datetime | None = None,
+            retries: int | None = None,
             **kwargs,
     ) -> tuple[Descriptor, cm.CacheItem, str | io.BytesIO | None]:
         """
@@ -176,22 +177,33 @@ class DownloadManager:
 
         # Instantiate the downloader (no download yet)
         backend = self.config.get('backend', 'requests').capitalize()
-        downloader = getattr(_downloader, f'{backend}Downloader')(
-            desc,
-            dest or None,
-        )
+        
+        for i in range(retries or 1):
+            
+            downloader = getattr(_downloader, f'{backend}Downloader')(
+                desc,
+                dest or None,
+            )
 
-        # Perform the download
-        if (
-            # If there's an uninitialized item
-            (item and item.rstatus == Status.UNINITIALIZED.value) or
-            # Or no item and no existing file/dest is buffer
-            (not item and (not os.path.exists(dest) or dest is False))
-        ):
+            # Perform the download
+            if (
+                # If there's an uninitialized item
+                (item and item.rstatus == Status.UNINITIALIZED.value) or
+                # Or no item and no existing file/dest is buffer
+                (not item and (not os.path.exists(dest) or dest is False))
+            ):
 
-            self._report_started(item)
-            downloader.download()
-            self._report_finished(item, downloader)
+                self._report_started(item)
+                downloader.download()
+                self._report_finished(item, downloader)
+            
+            if downloader.ok:
+
+                break
+
+            else:
+
+                pass # TODO: cleanup
 
         # Return destination path/pointer
         if (
