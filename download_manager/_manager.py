@@ -178,6 +178,7 @@ class DownloadManager:
             if not isinstance(dest, str) and (dest is True or dest is None):
 
                 item = self._get_cache_item(desc, newer_than, older_than)
+                old_dest = dest
                 dest = item.path
 
             downloader = getattr(_downloader, f'{backend}Downloader')(
@@ -203,7 +204,7 @@ class DownloadManager:
 
             else:
 
-                pass # TODO: cleanup
+                dest = old_dest
 
         # Return destination path/pointer
         if (
