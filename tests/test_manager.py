@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 import dateutil
 
 import cache_manager as cm
+from cache_manager._status import Status
 from cache_manager import utils
 
 import download_manager as dm
@@ -163,3 +164,7 @@ def test_retries(http_url, download_dir):
     key = dl[1].key
 
     cacheitem = manager.cache.search(key=key)
+
+    assert len(cacheitem) == 3
+    assert all(item._status == Status.FAILED.value for item in cacheitem)
+    assert all(item.attrs['http_code'] == 500 for item in cacheitem)
