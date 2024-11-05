@@ -138,7 +138,7 @@ def test_http_code(http_url, downloader):
             expected = 200 if code < 400 else code
             dl.download()
 
-            assert dl.status_code == expected
+            assert dl.http_code == expected
 
             if code < 400:
 
