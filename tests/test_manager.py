@@ -155,10 +155,10 @@ def test_store_resp_header(http_url, download_dir, d_config):
     )
 
 
-def test_retries(http_url, download_dir):
+def test_retries(http_url, download_dir, d_config):
 
     url = http_url + 'status/500'
-    manager = dm.DownloadManager(path=download_dir)
+    manager = dm.DownloadManager(path=download_dir, **d_config)
     dl = manager._download(dm.Descriptor(url), retries=3)
 
     key = dl[1].key
