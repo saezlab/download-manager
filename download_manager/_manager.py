@@ -309,6 +309,7 @@ class DownloadManager:
 
             args['attrs']['sha256'] = downloader.sha256
             args['attrs']['size'] = downloader.size
+            args['attrs']['http_code'] = downloader.http_code
 
             item.update(**args)
 

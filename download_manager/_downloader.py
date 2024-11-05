@@ -72,7 +72,7 @@ class AbstractDownloader(abc.ABC):
         self.desc = desc
         self._downloaded = 0
         self._expected_size = 0
-        self.status_code = 0
+        self.http_code = 0
         self.set_destination(destination)
 
 
@@ -186,7 +186,7 @@ class AbstractDownloader(abc.ABC):
     @property
     def success(self) -> bool:
 
-        return self.status_code == 200
+        return self.http_code == 200
 
 
     @property
@@ -325,7 +325,7 @@ class AbstractDownloader(abc.ABC):
     def post_download(self) -> None:
 
         self.parse_resp_headers()
-        self.get_status_code()
+        self.get_http_code()
 
 
     def parse_resp_headers(self) -> None:
@@ -536,9 +536,9 @@ class CurlDownloader(AbstractDownloader):
         super().parse_resp_headers()
 
 
-    def get_status_code(self) -> None:
+    def get_http_code(self) -> None:
 
-        self.status_code = self.handler.getinfo(self.handler.HTTP_CODE)
+        self.http_code = self.handler.getinfo(self.handler.HTTP_CODE)
 
 
 class RequestsDownloader(AbstractDownloader):
@@ -678,6 +678,6 @@ class RequestsDownloader(AbstractDownloader):
         super().parse_resp_headers()
 
 
-    def get_status_code(self) -> None:
+    def get_http_code(self) -> None:
 
-        self.status_code = self.response.status_code
+        self.http_code = self.response.http_code
