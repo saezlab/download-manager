@@ -168,18 +168,18 @@ class DownloadManager:
 
             dest = False
 
-        # Retrieve/create item from/in cache
-        # If dest is not str and not False
-        if not isinstance(dest, str) and (dest is True or dest is None):
-
-            item = self._get_cache_item(desc, newer_than, older_than)
-            dest = item.path
-
         # Instantiate the downloader (no download yet)
         backend = self.config.get('backend', 'requests').capitalize()
-        
+
         for i in range(retries or 1):
-            
+
+            # Retrieve/create item from/in cache
+            # If dest is not str and not False
+            if not isinstance(dest, str) and (dest is True or dest is None):
+
+                item = self._get_cache_item(desc, newer_than, older_than)
+                dest = item.path
+
             downloader = getattr(_downloader, f'{backend}Downloader')(
                 desc,
                 dest or None,
@@ -196,7 +196,7 @@ class DownloadManager:
                 self._report_started(item)
                 downloader.download()
                 self._report_finished(item, downloader)
-            
+
             if downloader.ok:
 
                 break
