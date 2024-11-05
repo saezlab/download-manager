@@ -152,3 +152,14 @@ def test_store_resp_header(http_url, download_dir):
         item.attrs['resp_headers']['Content-Type'] ==
         {'0': 'text/html', 'charset': 'utf-8'}
     )
+
+
+def test_retries(http_url, download_dir):
+
+    url = http_url + 'status/500'
+    manager = dm.DownloadManager(path=download_dir)
+    dl = manager._download(dm.Descriptor(url), retries=3)
+
+    key = dl[1].key
+
+    cacheitem = manager.cache.search(key=key)
