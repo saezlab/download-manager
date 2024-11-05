@@ -12,9 +12,9 @@ from download_manager import _constants
 __all__ = []
 
 
-def test_dest_buffer(http_url):
+def test_dest_buffer(http_url, d_config):
 
-    manager = dm.DownloadManager()
+    manager = dm.DownloadManager(**d_config)
     dest = manager.download(http_url, dest=False)
 
     assert manager.cache is None
@@ -22,10 +22,10 @@ def test_dest_buffer(http_url):
     assert dest.read().startswith(b'<!DOCTYPE html')
 
 
-def test_dest_path(http_url, download_dir):
+def test_dest_path(http_url, download_dir, d_config):
 
     path = os.path.join(download_dir, 'test_dest_path.html')
-    manager = dm.DownloadManager()
+    manager = dm.DownloadManager(**d_config)
     dest = manager.download(http_url, path)
 
     assert manager.cache is None
@@ -38,9 +38,9 @@ def test_dest_path(http_url, download_dir):
         assert fp.read().startswith('<!DOCTYPE html')
 
 
-def test_dest_cache(http_url, download_dir):
+def test_dest_cache(http_url, download_dir, d_config):
 
-    manager = dm.DownloadManager(path = download_dir)
+    manager = dm.DownloadManager(path= download_dir, **d_config)
     dest = manager.download(http_url)
 
     assert isinstance(manager.cache, cm.Cache)
@@ -52,10 +52,10 @@ def test_dest_cache(http_url, download_dir):
         assert fp.read().startswith('<!DOCTYPE html')
 
 
-def test_cache_integration(http_url, download_dir):
+def test_cache_integration(http_url, download_dir, d_config):
 
     query = {'foo': 'bar'}
-    manager = dm.DownloadManager(path=download_dir)
+    manager = dm.DownloadManager(path=download_dir, **d_config)
     dest = manager.download(
         http_url,
         query=query,
@@ -74,10 +74,10 @@ def test_cache_integration(http_url, download_dir):
     assert it.uri == http_url
 
 
-def test_cache_desc_reconstitution(http_url, download_dir):
+def test_cache_desc_reconstitution(http_url, download_dir, d_config):
 
     query = {'foo2': 'bar'}
-    manager = dm.DownloadManager(path=download_dir)
+    manager = dm.DownloadManager(path=download_dir, **d_config)
     desc, item, *_ = manager._download(
         http_url,
         query=query,
@@ -95,10 +95,10 @@ def test_cache_desc_reconstitution(http_url, download_dir):
     assert dict(desc_recon2) == dict(desc)
 
 
-def test_timestamps(http_url, download_dir):
+def test_timestamps(http_url, download_dir, d_config):
 
     query = {'updatefoo': 'updatebar'}
-    manager = dm.DownloadManager(path=download_dir)
+    manager = dm.DownloadManager(path=download_dir, **d_config)
     desc, item, *_ = manager._download(
         http_url,
         query=query,
@@ -114,11 +114,11 @@ def test_timestamps(http_url, download_dir):
     assert item.status == cm._status.Status.READY.value
 
 
-def test_store_req_headers(http_url, download_dir):
+def test_store_req_headers(http_url, download_dir, d_config):
 
     query = {'reqheaders': 'test'}
     headers = ['X-Test: test']
-    manager = dm.DownloadManager(path=download_dir)
+    manager = dm.DownloadManager(path=download_dir, **d_config)
     _ = manager._download(
         http_url,
         query=query,
@@ -133,10 +133,10 @@ def test_store_req_headers(http_url, download_dir):
     assert item.params['headers'] == headers
 
 
-def test_store_resp_header(http_url, download_dir):
+def test_store_resp_header(http_url, download_dir, d_config):
 
     query = {'resp_headers': 'test'}
-    manager = dm.DownloadManager(path=download_dir)
+    manager = dm.DownloadManager(path=download_dir, **d_config)
     _ = manager._download(
         http_url,
         query=query,
