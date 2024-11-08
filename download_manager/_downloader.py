@@ -591,7 +591,6 @@ class RequestsDownloader(AbstractDownloader):
         with self.session.send(req, **self.send_args) as resp:
 
             self.response = resp
-            resp.raise_for_status()
             self._expected_size = int(resp.headers.get('Content-Length', 0))
 
             for chunk in resp.iter_content(1024):

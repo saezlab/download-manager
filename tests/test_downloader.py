@@ -133,26 +133,18 @@ def test_http_code(http_url, downloader):
         dl = downloader(dm.Descriptor(url))
         dl.setup()
 
-        if code < 400 or downloader.__name__.startswith('Curl'):
+        expected = 200 if code < 400 else code
+        dl.download()
 
-            expected = 200 if code < 400 else code
-            dl.download()
+        assert dl.http_code == expected
 
-            assert dl.http_code == expected
+        if code < 400:
 
-            if code < 400:
+            assert dl.success
 
-                assert dl.success
-
-            else:
-
-                assert not dl.success
         else:
 
-            with pytest.raises(requests.exceptions.HTTPError):
-
-                dl.download()
-
+            assert not dl.success
 
 
 def test_property_to_buffer(http_url, downloader):
