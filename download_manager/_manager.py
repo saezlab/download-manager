@@ -160,67 +160,70 @@ class DownloadManager:
                 if isinstance(url, Descriptor) else
             Descriptor(url, **kwargs)
         )
+        backend = self.config.get('backend', 'requests').capitalize()
+        downloader_cls = getattr(_downloader, f'{backend}Downloader')
+
         item = None
         downloader = None
 
-        # When no path is provided and there's no cache, default to buffer
-        if self.cache is None and dest is None:
+        # Deciding what to do:
+        # 1) If dest is a path -> Download
+        # 2) If dest is True or None -> attempt to get from cache ->
+        #   2.1) If exists in cache (and disk) do not download
+        #   2.2) If no cache available, go to buffer
+        # 3) If dest is False -> download to buffer
+        path = None
+        to_buffer = False
+        cache = False
 
-            dest = False
+        # Case 1)
+        if isinstance(dest, str):
 
-        # Instantiate the downloader (no download yet)
-        backend = self.config.get('backend', 'requests').capitalize()
+            path = dest
+            # to_buffer = False, keeps default
+
+        # Case 2)
+        elif dest is True or dest is None:
+
+            cache = self.cache is not None
+            to_buffer = not cache
+
+        # Case 3)
+        elif dest is False:
+
+            to_buffer = True
 
         for i in range(retries or 1):
 
-            # Retrieve/create item from/in cache
-            # If dest is not str and not False
-            if not isinstance(dest, str) and (dest is True or dest is None):
+            if cache:
 
                 item = self._get_cache_item(desc, newer_than, older_than)
-                old_dest = dest
-                dest = item.path
+                path = item.path
 
-            downloader = getattr(_downloader, f'{backend}Downloader')(
-                desc,
-                dest or None,
-            )
+            # Instantiate the downloader (no download yet)
+            downloader = downloader_cls(desc, path)
 
-            # Perform the download
-            if (
-                # If there's an uninitialized item
-                (item and item.rstatus == Status.UNINITIALIZED.value) or
-                # Or no item and no existing file/dest is buffer
-                (not item and (not os.path.exists(dest) or dest is False))
-            ):
+            # Perform the download or break the loop when ok or already in cache
+            if not item or item.rstatus == Status.UNINITIALIZED.value:
 
                 self._report_started(item)
                 downloader.download()
                 self._report_finished(item, downloader)
 
-            if downloader.ok:
+                if downloader.ok:
 
-                break
+                    break
 
             else:
 
-                dest = old_dest
+                break
 
-        # Return destination path/pointer
-        if (
-            # No donwload or successfully finished
-            (downloader is None or downloader.ok) and
-            # And file exists or dest is buffer
-            (os.path.exists(dest) or dest is False) and
-            # And no item or item is ready
-            (not item or item.status == Status.READY.value)
-        ):
-
-            if dest is False: # File downloaded to buffer
-
-                dest = downloader._destination
-
-        return desc, item, downloader, dest
+        return (
+            desc,
+            item,
+            downloader,
+            downloader._destination if to_buffer else path
+        )
 
 
     def _get_cache_item(
@@ -315,7 +318,7 @@ class DownloadManager:
             item.update(**args)
 
 
-    def _report_started(self, item: cm.CacheItem):
+    def _report_started(self, item: cm.CacheItem | None):
         """
 
         """
