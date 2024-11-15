@@ -320,10 +320,9 @@ class AbstractDownloader(abc.ABC):
         raise NotImplementedError()
 
 
-    @abc.abstractmethod
     def set_req_headers(self) -> None:
 
-        raise NotImplementedError()
+        _log(f'Setting request headers: {",".join(self.desc["headers"])}')
 
 
     def set_progress(self) -> None:
@@ -386,6 +385,11 @@ class AbstractDownloader(abc.ABC):
         else:
 
             return len(self._destination.getbuffer())
+
+
+    def _log_multipart(self) -> None:
+
+        _log(f'Multipart form data {",".join(sorted(self.desc["multipart"].keys()))}')
 
 
 class CurlDownloader(AbstractDownloader):
@@ -493,12 +497,12 @@ class CurlDownloader(AbstractDownloader):
                 )
 
         if self.desc['post']:
+
             _log('Setting HTTP POST')
 
             if self.desc['multipart']:
 
-                _log(f'Multipart form data {",".join(sorted(self.desc["multipart"].keys()))}')
-
+                self._log_multipart()
                 self.desc['headers'].append(
                     'Content-Type: multipart/form-data'
                 )
@@ -535,7 +539,7 @@ class CurlDownloader(AbstractDownloader):
         Sets the request headers.
         """
 
-        _log(f'Setting request headers: {",".join(self.desc["headers"])}')
+        super().set_req_headers()
 
         self.handler.setopt(
             self.handler.HTTPHEADER,
@@ -618,6 +622,7 @@ class RequestsDownloader(AbstractDownloader):
 
         self.setup()
 
+        _log('Performing download')
         req = self.request.prepare()
 
         with self.session.send(req, **self.send_args) as resp:
@@ -630,9 +635,11 @@ class RequestsDownloader(AbstractDownloader):
                 self._destination.write(chunk)
                 self._downloaded =+ len(chunk)
 
+        _log('Finished retrieving data')
         self._destination.seek(0)
         self.close_dest()
         self.post_download()
+        _log('Download complete')
 
 
     def init_handler(self):
@@ -640,6 +647,7 @@ class RequestsDownloader(AbstractDownloader):
         Initializes the `requests`-based donwload handler and session.
         """
 
+        _log('Creating Requests Session and Request')
         self.session = requests.Session()
         self.request = requests.Request()
         self.send_args = {}
@@ -651,6 +659,8 @@ class RequestsDownloader(AbstractDownloader):
         download methods (get/post) based on the provided `Descriptor` instance.
         """
 
+        _log('Setting parameters for Requests')
+        _log(f'Setting URL: `{self.desc["url"]}`')
         self.request.url = self.desc['url']
         self.send_args['allow_redirects'] = self.desc['followlocation']
         self.send_args['timeout'] = (
@@ -660,10 +670,12 @@ class RequestsDownloader(AbstractDownloader):
 
         if self.desc['post']:
 
+            _log('Setting HTTP POST')
             self.request.method = 'POST'
 
             if self.desc['multipart']:
 
+                self._log_multipart()
                 data = self.desc['multipart']['data']
                 self.request.files = {
                     k: (v, open(v, 'rb'), mimetypes.guess_type(v)[0])
@@ -672,6 +684,7 @@ class RequestsDownloader(AbstractDownloader):
 
             else:
 
+                _log('JSON encoded POST fields')
                 data = (
                     json.dumps(self.desc['query'])
                     if self.desc['json']
@@ -684,6 +697,8 @@ class RequestsDownloader(AbstractDownloader):
 
             self.request.method = 'GET'
 
+        _log(f'send_args: [{cmutils.serialize(self.send_args)}]')
+
         # TODO: Figure out how to add these options in `requests` (if possible)
         #self.session.verify = self.desc['ssl_verifypeer']
         #if self.desc['ssl_verifypeer'] and self.desc['cainfo_override']:
@@ -694,6 +709,8 @@ class RequestsDownloader(AbstractDownloader):
         """
         Sets the request headers.
         """
+
+        super().set_req_headers()
 
         self.request.headers.update(self.desc.headers_dict)
 
