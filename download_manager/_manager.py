@@ -271,8 +271,8 @@ class DownloadManager:
 
             dl_params = {key: desc[key] for key in DL_ATTRS if key in desc}
             desc_params = dict(desc)
-            _log(f'DL_PARAMS: {cmutils.seralize(dl_params)}')
-            _log(f'DESC_PARAMS: {cmutils.seralize(desc_params)}')
+            _log(f'DL_PARAMS: {cmutils.serialize(dl_params)}')
+            _log(f'DESC_PARAMS: {cmutils.serialize(desc_params)}')
 
             item = self.cache.best_or_new(
                 uri = desc['baseurl'],
