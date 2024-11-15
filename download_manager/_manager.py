@@ -155,6 +155,7 @@ class DownloadManager:
             is located or the pointer to the file instance in the buffer.
         """
 
+        _log('Starting the download')
         desc = (
             url
                 if isinstance(url, Descriptor) else
@@ -162,6 +163,8 @@ class DownloadManager:
         )
         backend = self.config.get('backend', 'requests').capitalize()
         downloader_cls = getattr(_downloader, f'{backend}Downloader')
+
+        _log(f'Using backend: {backend}')
 
         item = None
         downloader = None
@@ -182,41 +185,52 @@ class DownloadManager:
             path = dest
             # to_buffer = False, keeps default
 
+            _log(f'Downloading to path: {path}')
+
         # Case 2)
         elif dest is True or dest is None:
 
             cache = self.cache is not None
             to_buffer = not cache
 
+            _log(f'Cache is available {cache}')
+
         # Case 3)
         elif dest is False:
 
             to_buffer = True
 
+        _log(f'Downloading to buffer {to_buffer}')
+
         for i in range(retries or 1):
+            _log(f'Attempt number {i}')
 
             if cache:
 
                 item = self._get_cache_item(desc, newer_than, older_than)
                 path = item.path
+                _log(f'Cache path: {path}')
 
             # Instantiate the downloader (no download yet)
             downloader = downloader_cls(desc, path)
 
             # Perform the download or break the loop when ok or already in cache
             if not item or item.rstatus == Status.UNINITIALIZED.value:
+                _log(f'No valid version in cache, starting download')
 
                 self._report_started(item)
                 downloader.download()
                 self._report_finished(item, downloader)
 
                 if downloader.ok:
-
+                    _log(f'Download was successful')
                     break
 
             else:
-
+                _log(f'Item retrieved from cache: {path}')
                 break
+
+        _log('Finished the download')
 
         return (
             desc,
