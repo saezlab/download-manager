@@ -23,14 +23,17 @@ import pycurl
 import requests
 
 from cache_manager import _open
+from cache_manager import utils as cmutils
 
 from . import _data
 from . import _curlopt
 from . import _descriptor
+from . import _log
 from . import _misc
 
 PARAMS = [
     'ssl_verifypeer',
+    'ssl_verifyhost',
     'cainfo',
     'url',
     'followlocation',
@@ -167,6 +170,7 @@ class AbstractDownloader(abc.ABC):
             and not isinstance(self._destination, io.BytesIO)
         ):
 
+            _log('Closing destination.')
             self._destination.close()
 
 
@@ -219,10 +223,16 @@ class AbstractDownloader(abc.ABC):
 
             if self.to_buffer:
 
+                _log('Returning buffer')
+
                 return self._destination
 
             else:
-
+                
+                _log(
+                    f'Opening path {self.path} with '
+                    f'{cmutils.serialize(kwargs)}'
+                )
                 self.opener = _open.Opener(self.path, **kwargs)
 
                 return self.opener.result
@@ -236,9 +246,13 @@ class AbstractDownloader(abc.ABC):
 
         if dest := self.destination:
 
+            _log(f'Opening destination for writing {dest}')
+
             self._destination = open(dest, 'wb')
 
         else:
+
+            _log(f'Creating buffer as download target')
 
             self._destination = io.BytesIO()
 
@@ -278,12 +292,14 @@ class AbstractDownloader(abc.ABC):
         initializing the download handler, configuration options, headers, etc.
         """
 
+        _log('Setting up downloader')
         self.init_handler()
         self.set_options()
         self.open_dest()
         self.set_req_headers()
         self.set_resp_headers()
         self.set_progress()
+        _log('Finished setting up the downloader')
 
 
     @abc.abstractmethod
@@ -324,8 +340,10 @@ class AbstractDownloader(abc.ABC):
 
     def post_download(self) -> None:
 
+        _log('Post-download workflow started')
         self.parse_resp_headers()
         self.get_http_code()
+        _log('Finished post-download workflow')
 
 
     def parse_resp_headers(self) -> None:
@@ -334,6 +352,7 @@ class AbstractDownloader(abc.ABC):
             key: self.parse_subheader(self.resp_headers.get(key, ''))
             for key in ['Content-Disposition', 'Content-Type']
         })
+        _log(f'Parsing response headers {cmutils.serialize(self.resp_headers)}')
 
 
     @staticmethod
