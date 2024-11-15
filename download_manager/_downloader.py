@@ -228,7 +228,7 @@ class AbstractDownloader(abc.ABC):
                 return self._destination
 
             else:
-                
+
                 _log(
                     f'Opening path {self.path} with '
                     f'{cmutils.serialize(kwargs)}'
@@ -343,6 +343,7 @@ class AbstractDownloader(abc.ABC):
         _log('Post-download workflow started')
         self.parse_resp_headers()
         self.get_http_code()
+        _log(f'HTTP status code {self.http_code}')
         _log('Finished post-download workflow')
 
 
@@ -436,6 +437,7 @@ class CurlDownloader(AbstractDownloader):
         Initializes the `curl`-based donwload handler.
         """
 
+        _log('Creating pycurl object')
         self.handler = pycurl.Curl()
 
 
@@ -446,12 +448,13 @@ class CurlDownloader(AbstractDownloader):
         """
 
         self.setup()
+        _log('Performing download')
         self.handler.perform()
         self.post_download()
         self.handler.close()
         self._destination.seek(0)
         self.close_dest()
-
+        _log('Download complete')
 
     def open_dest(self):
         """
@@ -477,9 +480,12 @@ class CurlDownloader(AbstractDownloader):
         download methods (get/post) based on the provided `Descriptor` instance.
         """
 
+        _log('Set parameters for Curl')
+
         for param in PARAMS:
 
             if (value := self.desc[param]) is not None:
+                _log(f'Curl parameter: {param} = {value}')
 
                 self.handler.setopt(
                     getattr(self.handler, param.upper()),
@@ -487,8 +493,11 @@ class CurlDownloader(AbstractDownloader):
                 )
 
         if self.desc['post']:
+            _log('Setting HTTP POST')
 
             if self.desc['multipart']:
+
+                _log(f'Multipart form data {",".join(sorted(self.desc["multipart"].keys()))}')
 
                 self.desc['headers'].append(
                     'Content-Type: multipart/form-data'
@@ -510,6 +519,8 @@ class CurlDownloader(AbstractDownloader):
 
             else:
 
+                _log("JSON encoded post fields")
+
                 data = (
                     json.dumps(self.desc['query'])
                     if self.desc['json']
@@ -523,6 +534,8 @@ class CurlDownloader(AbstractDownloader):
         """
         Sets the request headers.
         """
+
+        _log(f'Setting request headers: {",".join(self.desc["headers"])}')
 
         self.handler.setopt(
             self.handler.HTTPHEADER,
