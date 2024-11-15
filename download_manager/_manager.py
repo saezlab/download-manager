@@ -12,6 +12,7 @@ import datetime
 from pypath_common import data as _data
 from cache_manager._status import Status
 import cache_manager as cm
+import cache_manager.utils as cmutils
 from . import _log, _downloader
 from ._descriptor import Descriptor
 from . import _constants
@@ -270,6 +271,8 @@ class DownloadManager:
 
             dl_params = {key: desc[key] for key in DL_ATTRS if key in desc}
             desc_params = dict(desc)
+            _log(f'DL_PARAMS: {cmutils.seralize(dl_params)}')
+            _log(f'DESC_PARAMS: {cmutils.seralize(desc_params)}')
 
             item = self.cache.best_or_new(
                 uri = desc['baseurl'],
@@ -280,6 +283,8 @@ class DownloadManager:
                 new_status = Status.UNINITIALIZED.value,
                 status = {Status.READY.value, Status.WRITE.value},
             )
+
+            _log(f'Cache item: {item.__repr__()}')
 
             return item
 
