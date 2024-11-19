@@ -333,6 +333,10 @@ class DownloadManager:
             args['attrs']['sha256'] = downloader.sha256
             args['attrs']['size'] = downloader.size
             args['attrs']['http_code'] = downloader.http_code
+            _log(
+                f'Saving download metadata to cache.'
+                f'Size = {downloader.size}, HTTP code = {downloader.http_code}'
+            )
 
             item.update(**args)
 
