@@ -60,6 +60,7 @@ class DownloadManager:
             **kwargs,
     ):
 
+        _log('Creating DownloadManager')
         self._set_config(config, **kwargs)
         self._set_cache(path=path, pkg=pkg)
 
