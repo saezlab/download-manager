@@ -18,63 +18,72 @@ class MetadataStore:
     """
     Manages metadata for downloaded files.
 
-    Stores metadata in .metadata/{filename}.meta as JSON.
+    Stores metadata in .metadata/{filename}.meta as JSON alongside the file.
     """
 
-    def __init__(self, data_folder: str | Path, module_name: str):
+    def __init__(self, data_folder: Path):
         """
         Initialize metadata store.
 
         Args:
             data_folder: Base data folder
-            module_name: Module subfolder name
         """
-        self.data_folder = Path(data_folder)
-        self.module_name = module_name
-        self.module_folder = self.data_folder / module_name
-        self.metadata_folder = self.module_folder / '.metadata'
+        self.data_folder = data_folder
 
-        # Create folders if they don't exist
-        self.metadata_folder.mkdir(parents=True, exist_ok=True)
+    def get_metadata_path(self, file_path: Path) -> Path:
+        """
+        Get path to metadata file for given file.
 
-    def get_metadata_path(self, filename: str) -> Path:
-        """Get path to metadata file for given filename."""
-        return self.metadata_folder / f"{filename}.meta"
+        Args:
+            file_path: Path to the actual file
 
-    def load(self, filename: str) -> dict:
+        Returns:
+            Path to the metadata file in the same directory as the file.
+        """
+
+        # Get the directory containing the file
+        file_dir = file_path.parent
+
+        # Create .metadata folder in the same directory
+        metadata_folder = file_dir / '.metadata'
+        metadata_folder.mkdir(parents=True, exist_ok=True)
+
+        return metadata_folder / f"{file_path.name}.meta"
+
+    def load(self, file_path: Path) -> dict:
         """
         Load metadata for a file.
 
         Args:
-            filename: Name of the file
+            file_path: Path to the file
 
         Returns:
             Dictionary with metadata, or empty dict if not found
         """
-        meta_path = self.get_metadata_path(filename)
+        meta_path = self.get_metadata_path(file_path)
 
         if not meta_path.exists():
-            _log(f"No metadata found for {filename}")
+            _log(f"No metadata found for {file_path}")
             return {}
 
         try:
             with open(meta_path, 'r') as f:
                 metadata = json.load(f)
-            _log(f"Loaded metadata for {filename}: {list(metadata.keys())}")
+            _log(f"Loaded metadata for {file_path}: {list(metadata.keys())}")
             return metadata
         except (json.JSONDecodeError, OSError) as e:
-            _log(f"Error loading metadata for {filename}: {e}")
+            _log(f"Error loading metadata for {file_path}: {e}")
             return {}
 
-    def save(self, filename: str, metadata: dict) -> None:
+    def save(self, file_path: Path, metadata: dict) -> None:
         """
         Save metadata for a file.
 
         Args:
-            filename: Name of the file
+            file_path: Path to the file
             metadata: Dictionary with metadata to save
         """
-        meta_path = self.get_metadata_path(filename)
+        meta_path = self.get_metadata_path(file_path)
 
         # Add timestamp
         metadata['_updated'] = datetime.now().isoformat()
@@ -82,41 +91,41 @@ class MetadataStore:
         try:
             with open(meta_path, 'w') as f:
                 json.dump(metadata, f, indent=2, default=str)
-            _log(f"Saved metadata for {filename}: {list(metadata.keys())}")
+            _log(f"Saved metadata for {file_path}: {list(metadata.keys())}")
         except OSError as e:
-            _log(f"Error saving metadata for {filename}: {e}")
+            _log(f"Error saving metadata for {file_path}: {e}")
 
-    def update(self, filename: str, **kwargs) -> None:
+    def update(self, file_path: Path, **kwargs) -> None:
         """
         Update metadata for a file (merges with existing).
 
         Args:
-            filename: Name of the file
+            file_path: Path to the file
             **kwargs: Metadata fields to update
         """
-        metadata = self.load(filename)
+        metadata = self.load(file_path)
         metadata.update(kwargs)
-        self.save(filename, metadata)
+        self.save(file_path, metadata)
 
-    def delete(self, filename: str) -> None:
+    def delete(self, file_path: Path) -> None:
         """
         Delete metadata for a file.
 
         Args:
-            filename: Name of the file
+            file_path: Path to the file
         """
-        meta_path = self.get_metadata_path(filename)
+        meta_path = self.get_metadata_path(file_path)
 
         if meta_path.exists():
             try:
                 meta_path.unlink()
-                _log(f"Deleted metadata for {filename}")
+                _log(f"Deleted metadata for {file_path}")
             except OSError as e:
-                _log(f"Error deleting metadata for {filename}: {e}")
+                _log(f"Error deleting metadata for {file_path}: {e}")
 
     def save_from_headers(
         self,
-        filename: str,
+        file_path: Path,
         headers: dict,
         sha256: str | None = None,
         size: int | None = None,
@@ -129,7 +138,7 @@ class MetadataStore:
         Save metadata extracted from response headers and download details.
 
         Args:
-            filename: Name of the file
+            file_path: Path to the file
             headers: Response headers dict
             sha256: SHA256 checksum of the file
             size: File size in bytes
@@ -173,4 +182,4 @@ class MetadataStore:
         # Add download timestamp
         metadata['downloaded_at'] = datetime.now().isoformat()
 
-        self.save(filename, metadata)
+        self.save(file_path, metadata)

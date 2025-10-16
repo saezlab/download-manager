@@ -22,8 +22,6 @@ class DownloadManager:
     Args:
         data_folder:
             Base folder for all raw data files.
-        module_name:
-            Subfolder name for this module (e.g., 'uniprot', 'ensembl').
         config:
             Accepts either a dictionary with the key/value pairs corresponding
             to parameter name/value or a path to the configuration file.
@@ -33,12 +31,6 @@ class DownloadManager:
     Attrs:
         data_folder:
             Base data folder path.
-        module_name:
-            Module subfolder name.
-        module_folder:
-            Full path to module subfolder.
-        metadata:
-            MetadataStore instance for managing file metadata.
         config:
             Configuration parameters for the download manager as dictionary of
             key/value pairs corresponding to the parameter name/value.
@@ -47,23 +39,20 @@ class DownloadManager:
     def __init__(
             self,
             data_folder: str | Path,
-            module_name: str,
             config: str | dict | None = None,
             **kwargs,
     ):
         self._set_config(config, **kwargs)
         self.data_folder = Path(data_folder)
-        self.module_name = module_name
-        self.module_folder = self.data_folder / module_name
-        self.module_folder.mkdir(parents=True, exist_ok=True)
-
-        self.metadata = MetadataStore(data_folder, module_name)
+        self.data_folder.mkdir(parents=True, exist_ok=True)
+        self.metadata = MetadataStore(self.data_folder)
 
 
     def download(
             self,
             url: str | Descriptor,
             filename: str | None = None,
+            subfolder: str | None = None,
             dest: str | bool | None = None,
             check_freshness: bool = False,
             check_method: str = 'auto',
@@ -82,9 +71,12 @@ class DownloadManager:
             filename:
                 Name for the downloaded file. If None, auto-detected from URL
                 or Content-Disposition header.
+            subfolder:
+                Subfolder within data_folder to store the file (e.g., 'signor', 'intact').
+                If None and dest is also None, downloads directly to data_folder.
             dest:
                 Destination path. If set to `False`, downloads to buffer (memory).
-                If None, uses module_folder/{filename}. If string, uses that path.
+                If None, uses data_folder/subfolder/{filename}. If string, uses that path.
             check_freshness:
                 If True and local file exists, check if remote version is newer.
             check_method:
@@ -133,11 +125,18 @@ class DownloadManager:
             # Will be determined from URL or headers after download
             filename = None
 
+        # Determine target folder
+        if subfolder:
+            target_folder = self.data_folder / subfolder
+            target_folder.mkdir(parents=True, exist_ok=True)
+        else:
+            target_folder = self.data_folder
+
         # Determine file path
         if isinstance(dest, str):
             file_path = Path(dest)
         elif filename:
-            file_path = self.module_folder / filename
+            file_path = target_folder / filename
         else:
             # We'll determine it after getting headers
             file_path = None
@@ -154,7 +153,7 @@ class DownloadManager:
                 )
 
                 if remote_headers:
-                    local_metadata = self.metadata.load(file_path.name)
+                    local_metadata = self.metadata.load(file_path)
                     is_current, reason = _freshness.check_freshness(
                         file_path,
                         remote_headers,
@@ -197,11 +196,11 @@ class DownloadManager:
                 # For curl, we can get headers without full download
                 # For now, let's use the URL-based filename
                 filename = temp_downloader.filename or 'download'
-                file_path = self.module_folder / filename
+                file_path = target_folder / filename
             else:
                 # For requests, similar approach
                 filename = temp_downloader.filename or 'download'
-                file_path = self.module_folder / filename
+                file_path = target_folder / filename
 
         # Perform the actual download
         downloader = downloader_cls(desc, str(file_path))
@@ -212,7 +211,7 @@ class DownloadManager:
 
             # Save metadata with download details
             self.metadata.save_from_headers(
-                file_path.name,
+                file_path,
                 downloader.resp_headers,
                 sha256=downloader.sha256,
                 size=downloader.size,
