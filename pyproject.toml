@@ -31,7 +31,6 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.9"
 toml = "*"
-cachemanager = { git = "https://github.com/saezlab/cache-manager.git", branch = "main" }
 pycurl = "^7.45.3"
 requests = "^2.32.3"
 certifi = "^2024.7.4"

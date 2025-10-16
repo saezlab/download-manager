@@ -28,4 +28,3 @@ from ._metadata import __author__, __version__
 from ._descriptor import Descriptor
 from ._downloader import *
 from ._manager import *
-from cache_manager import _log

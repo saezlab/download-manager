@@ -22,8 +22,7 @@ from ._misc import file_digest
 import pycurl
 import requests
 
-from cache_manager import _open
-from cache_manager import utils as cmutils
+from . import _utils
 
 from . import _data
 from . import _curlopt
@@ -231,11 +230,11 @@ class AbstractDownloader(abc.ABC):
 
                 _log(
                     f'Opening path {self.path} with '
-                    f'{cmutils.serialize(kwargs)}'
+                    f'{_utils.serialize(kwargs)}'
                 )
-                self.opener = _open.Opener(self.path, **kwargs)
 
-                return self.opener.result
+                # Simple file opening - users can handle decompression themselves
+                return open(self.path, 'rb')
 
 
     def open_dest(self):
@@ -352,7 +351,7 @@ class AbstractDownloader(abc.ABC):
             key: self.parse_subheader(self.resp_headers.get(key, ''))
             for key in ['Content-Disposition', 'Content-Type']
         })
-        _log(f'Parsing response headers {cmutils.serialize(self.resp_headers)}')
+        _log(f'Parsing response headers {_utils.serialize(self.resp_headers)}')
 
 
     @staticmethod
@@ -697,7 +696,7 @@ class RequestsDownloader(AbstractDownloader):
 
             self.request.method = 'GET'
 
-        _log(f'send_args: [{cmutils.serialize(self.send_args)}]')
+        _log(f'send_args: [{_utils.serialize(self.send_args)}]')
 
         # TODO: Figure out how to add these options in `requests` (if possible)
         #self.session.verify = self.desc['ssl_verifypeer']
