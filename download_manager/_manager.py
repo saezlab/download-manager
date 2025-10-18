@@ -107,6 +107,9 @@ class DownloadManager:
         downloader_cls = getattr(_downloader, f'{backend}Downloader')
         _log(f'Using backend: {backend}')
 
+        # Get progress bar setting (defaults to True)
+        show_progress = self.config.get('progress', True)
+
         # Determine destination
         to_buffer = dest is False
         needs_download = force_download
@@ -114,7 +117,7 @@ class DownloadManager:
         if to_buffer:
             # Download to buffer
             _log('Downloading to buffer')
-            downloader = downloader_cls(desc, None)
+            downloader = downloader_cls(desc, None, progress=show_progress)
             downloader.download()
             return downloader._destination if downloader.ok else None
 
@@ -203,7 +206,7 @@ class DownloadManager:
                 file_path = target_folder / filename
 
         # Perform the actual download
-        downloader = downloader_cls(desc, str(file_path))
+        downloader = downloader_cls(desc, str(file_path), progress=show_progress)
         downloader.download()
 
         if downloader.ok:
