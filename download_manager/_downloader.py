@@ -7,7 +7,7 @@ __all__ = [
     'RequestsDownloader',
 ]
 
-from typing import Any
+from typing import Any, IO
 import io
 import os
 import abc
@@ -17,6 +17,7 @@ import urllib.parse as urlparse
 import json
 import mimetypes
 import hashlib
+import time
 from ._misc import file_digest
 
 import pycurl
@@ -79,6 +80,10 @@ class AbstractDownloader(abc.ABC):
         self.http_code = 0
         self._progress_bar = None
         self._show_progress = progress
+        self._progress_pending = 0
+        self._progress_min_chunk = 64 * 1024  # flush at least every 64KB
+        self._progress_min_interval = 0.1  # or every 100ms
+        self._last_progress_update = 0.0
         self.set_destination(destination)
 
 
@@ -333,6 +338,12 @@ class AbstractDownloader(abc.ABC):
 
         self._downloaded = 0
         self._expected_size = 0
+        self._progress_pending = 0
+        self._last_progress_update = time.monotonic()
+
+        # Ensure any prior progress bar is cleaned up before starting anew
+        if self._progress_bar is not None:
+            self.close_progress()
 
     def init_progress(self, total: int | None = None, desc: str = 'Downloading') -> None:
         """
@@ -343,7 +354,10 @@ class AbstractDownloader(abc.ABC):
             desc: Description to display for the progress bar.
         """
 
-        if self._show_progress and not self._progress_bar:
+        if not self._show_progress:
+            return
+
+        if self._progress_bar is None:
             self._progress_bar = tqdm.tqdm(
                 total=total,
                 unit='B',
@@ -351,18 +365,60 @@ class AbstractDownloader(abc.ABC):
                 unit_divisor=1024,
                 desc=desc,
                 leave=True,
+                dynamic_ncols=True,
             )
+            return
 
-    def update_progress(self, n: int) -> None:
+        # Update description if it changed
+        if desc and self._progress_bar.desc != desc:
+            self._progress_bar.set_description(desc, refresh=False)
+
+        if total is not None:
+            self._progress_bar.total = total
+
+    def update_progress(self, n: int, force: bool = False) -> None:
         """
         Update the progress bar by n bytes.
 
         Args:
             n: Number of bytes to add to progress.
+            force: Flush buffered progress immediately regardless of thresholds.
         """
 
-        if self._progress_bar:
-            self._progress_bar.update(n)
+        if not self._show_progress:
+            return
+
+        if n > 0:
+            if self._progress_bar is None:
+                # Total may still be unknown at this point
+                total = self._expected_size or None
+                self.init_progress(total=total)
+
+            if self._progress_bar is None:
+                return
+
+            self._progress_pending += n
+        elif self._progress_bar is None:
+            # Nothing to flush and no bar to update
+            return
+
+        now = time.monotonic()
+        should_flush = force or (
+            self._progress_pending >= self._progress_min_chunk
+            or (now - self._last_progress_update) >= self._progress_min_interval
+        )
+
+        if not should_flush:
+            return
+
+        if self._progress_pending > 0:
+            self._progress_bar.update(self._progress_pending)
+            self._progress_pending = 0
+
+        if force:
+            self._progress_bar.refresh()
+
+        self._last_progress_update = now
 
     def set_progress_total(self, total: int) -> None:
         """
@@ -372,15 +428,21 @@ class AbstractDownloader(abc.ABC):
             total: Total size in bytes.
         """
 
-        if self._progress_bar:
-            self._progress_bar.total = total
+        if total <= 0 or not self._show_progress:
+            return
+
+        # Ensure progress bar exists and reflects the new total
+        self.init_progress(total=total)
 
     def close_progress(self) -> None:
         """
         Close and cleanup the progress bar.
         """
 
-        if self._progress_bar:
+        # Flush any buffered progress before closing
+        self.update_progress(0, force=True)
+
+        if self._progress_bar is not None:
             self._progress_bar.close()
             self._progress_bar = None
 
@@ -487,16 +549,26 @@ class CurlDownloader(AbstractDownloader):
         uploaded: int,
     ) -> None:
 
-        # Initialize progress bar on first call when we know the total size
-        if download_total > 0 and not self._progress_bar:
-            self.init_progress(total=download_total, desc=f'Downloading {self.filename or "file"}')
+        # Ensure a progress bar exists before attempting to update it
+        if self._show_progress and self._progress_bar is None:
+            initial_total = download_total if download_total > 0 else None
+            self.init_progress(total=initial_total)
+
+        # Update total size when it becomes available
+        if download_total > 0 and self._expected_size != download_total:
+            self._expected_size = download_total
+            self.set_progress_total(download_total)
 
         # Update progress
-        if self._progress_bar and downloaded > self._downloaded:
-            self.update_progress(downloaded - self._downloaded)
+        if downloaded > self._downloaded:
+            delta = downloaded - self._downloaded
+            force_flush = download_total > 0 and downloaded >= download_total
+            self.update_progress(delta, force=force_flush)
+        elif download_total > 0 and downloaded >= download_total:
+            # Ensure buffered progress is flushed when finished
+            self.update_progress(0, force=True)
 
         self._downloaded = downloaded
-        self._expected_size = download_total
 
 
     def init_handler(self):
@@ -695,19 +767,37 @@ class RequestsDownloader(AbstractDownloader):
             self.response = resp
             self._expected_size = int(resp.headers.get('Content-Length', 0))
 
-            # Initialize progress bar with known size
-            if self._expected_size > 0:
-                self.init_progress(total=self._expected_size, desc=f'Downloading {self.filename or "file"}')
+            progress_desc = 'Downloading'
+            if self._show_progress:
+                url_path = urlparse.urlparse(self.desc['url']).path
+                inferred_name = self.filename or os.path.basename(url_path)
+                if inferred_name:
+                    progress_desc = f'Downloading {inferred_name}'
 
-            for chunk in resp.iter_content(1024):
+            # Ensure progress bar exists even if total is unknown
+            self.init_progress(
+                total=self._expected_size or None,
+                desc=progress_desc,
+            )
+
+            # Update progress bar total if known
+            if self._expected_size > 0:
+                self.set_progress_total(self._expected_size)
+
+            for chunk in resp.iter_content(chunk_size=64 * 1024):
+
+                if not chunk:
+                    continue
 
                 self._destination.write(chunk)
                 chunk_size = len(chunk)
                 self._downloaded += chunk_size
 
                 # Update progress bar
-                if self._progress_bar:
-                    self.update_progress(chunk_size)
+                self.update_progress(chunk_size)
+
+            # Flush any buffered progress before closing the response context
+            self.update_progress(0, force=True)
 
         _log('Finished retrieving data')
         self.close_progress()
@@ -742,6 +832,8 @@ class RequestsDownloader(AbstractDownloader):
             self.desc['connecttimeout'],
             self.desc['timeout'],
         )
+        # Stream response so progress updates while downloading, not after
+        self.send_args['stream'] = True
 
         if self.desc['post']:
 
