@@ -20,7 +20,7 @@ from pypath_common import _constants as _const
 from cache_manager._session import _log
 
 COMPRESSED =  {'gz', 'xz', 'bz2'}
-ARCHIVES = {'zip', 'tar.gz', 'tar.bz2', 'tar.xz'}
+ARCHIVES = {'zip', 'tar', 'tar.gz', 'tar.bz2', 'tar.xz'}
 
 
 class Opener:
@@ -239,7 +239,8 @@ class Opener:
         self._files = {}
         self.sizes = {}
         compr = self.ext.split('.')[-1]
-        self.tarfile = tarfile.open(fileobj=self.fileobj, mode=f'r:{compr}')
+        mode = 'r:' if self.ext == 'tar' or compr == 'tar' else f'r:{compr}'
+        self.tarfile = tarfile.open(fileobj=self.fileobj, mode=mode)
         self._members = self.tarfile.getmembers()
 
         for m in self._members:
