@@ -234,7 +234,8 @@ class AbstractDownloader(abc.ABC):
     @property
     def to_buffer(self) -> bool:
 
-        to_buffer = isinstance(self._destination, io.BytesIO)
+        destination = getattr(self, '_destination', None)
+        to_buffer = isinstance(destination, io.BytesIO)
         logger.debug('Destination is buffer=%s', to_buffer)
         return to_buffer
 
@@ -419,7 +420,8 @@ class AbstractDownloader(abc.ABC):
     @property
     def path(self):
 
-        path = getattr(self._destination, 'name', None)
+        destination = getattr(self, '_destination', None)
+        path = getattr(destination, 'name', None)
         logger.debug('Resolved destination path=%r', path)
         return path
 
