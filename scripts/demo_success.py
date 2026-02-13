@@ -15,17 +15,6 @@ if str(PROJECT_ROOT) not in sys.path:
 
 import download_manager as dm
 
-
-# def configure_logging() -> None:
-#     """Enable built-in logging for the whole process."""
-
-#     logging.basicConfig(
-#         level=logging.INFO,
-#         format="%(asctime)s [%(levelname)5s] [%(name)s:%(lineno)d] %(message)s",
-#     )
-#     logging.getLogger("download_manager").setLevel(logging.INFO)
-
-
 def main() -> int:
 
     # Import saezlab_core library
