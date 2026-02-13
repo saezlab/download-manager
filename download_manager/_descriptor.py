@@ -8,11 +8,15 @@ from typing import Any
 from collections import abc
 import os
 import urllib
+import logging
 
 import certifi
 from pypath_common import _misc as misc
 
 from . import _data
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 
 class Descriptor(abc.Mapping):
@@ -22,6 +26,11 @@ class Descriptor(abc.Mapping):
 
     def __init__(self, *args, **kwargs):
 
+        logger.debug(
+            'Initializing Descriptor with args=%r kwargs_keys=%s',
+            args,
+            sorted(kwargs.keys()),
+        )
         self._param = dict()
 
         url_fname, *_ = list(args) + [None]
@@ -29,18 +38,22 @@ class Descriptor(abc.Mapping):
         fname = url_fname or self['fname']
 
         if fname and os.path.exists(fname):
+            logger.info('Loading descriptor parameters from file: %s', fname)
 
             self.from_file(fname = fname)
 
         else:
+            logger.debug('Using URL from arguments/kwargs, fname=%r', fname)
 
             self._param['url'] = self['url'] or url_fname
 
         if not self['url']:
+            logger.error('Descriptor initialization failed: missing URL')
 
             raise ValueError('Missing URL')
 
         if not self['cainfo']:
+            logger.info('No cainfo provided, using certifi default bundle')
 
             self['cainfo'] =  certifi.where()
 
@@ -50,6 +63,12 @@ class Descriptor(abc.Mapping):
         self.set_get_post()
         self.set_headers()
         self.set_multipart()
+        logger.info(
+            'Descriptor initialized for baseurl=%s post=%s has_query=%s',
+            self['baseurl'],
+            bool(self['post']),
+            bool(self['query']),
+        )
 
 
     def __iter__(self):
@@ -75,6 +94,7 @@ class Descriptor(abc.Mapping):
     def __setitem__(self, key: Any, value: Any):
 
         self._param[key] = value
+        logger.debug('Descriptor param set: %r=%r', key, value)
 
 
     def from_file(self, fname: str): # TODO: Specify format of the config file
@@ -86,7 +106,14 @@ class Descriptor(abc.Mapping):
                 Path to the file with the parameters.
         """
 
-        self._param.update(_data._module_data(fname))
+        logger.debug('Reading descriptor data file: %s', fname)
+        loaded = _data._module_data(fname)
+        logger.info(
+            'Loaded %d descriptor params from file %s',
+            len(loaded or {}),
+            fname,
+        )
+        self._param.update(loaded)
 
 
     @property
@@ -99,7 +126,9 @@ class Descriptor(abc.Mapping):
             name/value respectively.
         """
 
-        return dict(elem.split(': ', maxsplit=1) for elem in self['headers'])
+        headers = self['headers'] or []
+        logger.debug('Converting %d headers to dict', len(headers))
+        return dict(elem.split(': ', maxsplit=1) for elem in headers)
 
 
     def set_get_post(self):
@@ -109,10 +138,16 @@ class Descriptor(abc.Mapping):
         """
 
         if q := self['query']:
+            logger.debug('Encoding query parameters with %d entries', len(q))
 
             self['qs'] = urllib.parse.urlencode(q)
 
         if self['json'] or self['multipart']:
+            logger.info(
+                'Forcing POST because json=%s multipart=%s',
+                bool(self['json']),
+                bool(self['multipart']),
+            )
 
             self['post'] = True
 
@@ -121,6 +156,7 @@ class Descriptor(abc.Mapping):
                 if self['post'] or not self['qs'] else
             f'{self["baseurl"]}?{self["qs"]}'
         )
+        logger.debug('Resolved request URL: %s', self['url'])
 
 
     def set_headers(self):
@@ -131,12 +167,15 @@ class Descriptor(abc.Mapping):
         hdr = self['headers']
 
         if isinstance(hdr, dict):
+            logger.debug('Converting header dict to list format')
 
             hdr = [': '.join(h) for h in hdr.items()]
 
         hdr = misc.to_list(hdr)
+        logger.debug('Normalized headers list length: %d', len(hdr))
 
         if self['json']:
+            logger.info('Adding JSON content-type header')
 
             hdr.append('Content-Type: application/json')
 
@@ -152,11 +191,13 @@ class Descriptor(abc.Mapping):
             A list with the headers as byte-strings.
         """
 
-        return [
+        headers = [
             s.encode('ascii')
             if hasattr(s, 'encode') else s
             for s in self['headers'] or []
         ]
+        logger.debug('Converted %d headers to ASCII bytes', len(headers))
+        return headers
 
 
     def set_multipart(self):
@@ -168,6 +209,10 @@ class Descriptor(abc.Mapping):
         """
 
         if self['multipart']:
+            logger.info(
+                'Processing multipart payload with %d fields',
+                len(self['multipart']),
+            )
 
             multipart = {'data': {}, 'files': {}}
 
@@ -175,6 +220,15 @@ class Descriptor(abc.Mapping):
 
                 v = str(v)
                 param_typ = 'files' if os.path.exists(v) else 'data'
+                if param_typ == 'files':
+                    logger.debug('Multipart key %r classified as file %s', k, v)
+                else:
+                    logger.debug('Multipart key %r classified as form data', k)
                 multipart[param_typ][k] = v
 
             self['multipart'] = multipart
+            logger.info(
+                'Multipart split complete: data=%d files=%d',
+                len(multipart['data']),
+                len(multipart['files']),
+            )

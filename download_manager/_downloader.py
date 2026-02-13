@@ -17,6 +17,7 @@ import urllib.parse as urlparse
 import json
 import mimetypes
 import hashlib
+import logging
 from ._misc import file_digest
 
 import pycurl
@@ -30,6 +31,9 @@ from . import _curlopt
 from . import _descriptor
 from . import _log
 from . import _misc
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 PARAMS = [
     'ssl_verifypeer',
@@ -72,6 +76,11 @@ class AbstractDownloader(abc.ABC):
             destination: str | None = None,
     ):
         super().__init__()
+        logger.debug(
+            'Initializing %s destination=%r',
+            self.__class__.__name__,
+            destination,
+        )
         self.desc = desc
         self._downloaded = 0
         self._expected_size = 0
@@ -81,6 +90,7 @@ class AbstractDownloader(abc.ABC):
 
     def __del__(self):
 
+        logger.debug('Finalizing %s', self.__class__.__name__)
         self.close_dest()
 
     @property
@@ -99,6 +109,7 @@ class AbstractDownloader(abc.ABC):
                 get('filename', fname)
             )
 
+        logger.debug('Resolved filename=%r', fname)
         return fname
 
 
@@ -106,7 +117,9 @@ class AbstractDownloader(abc.ABC):
     def ext(self) -> str | None:
         # TODO: Handle case when downloader gets file from cache
 
-        return os.path.splitext(self.filename)[1]
+        ext = os.path.splitext(self.filename)[1]
+        logger.debug('Resolved extension=%r', ext)
+        return ext
 
 
     @property
@@ -131,6 +144,7 @@ class AbstractDownloader(abc.ABC):
         """
 
         if self.ok:
+            logger.debug('Computing %s checksum', digest)
 
             if self.path and os.path.exists(self.path):
 
@@ -144,6 +158,10 @@ class AbstractDownloader(abc.ABC):
                 h.update(self._destination.getvalue())
 
             return h.hexdigest()
+        logger.warning(
+            'Skipping checksum because download is not successful (http_code=%s)',
+            self.http_code,
+        )
 
 
     @property
@@ -171,6 +189,7 @@ class AbstractDownloader(abc.ABC):
         ):
 
             _log('Closing destination.')
+            logger.debug('Closing destination object type=%s', type(self._destination).__name__)
             self._destination.close()
 
 
@@ -184,25 +203,40 @@ class AbstractDownloader(abc.ABC):
         """
 
         # TODO: Do we set up the `success` attribute somewhere?
-        return self.success and (self.path_exists or self.to_buffer)
+        ok = self.success and (self.path_exists or self.to_buffer)
+        logger.debug(
+            'Evaluated ok=%s success=%s path_exists=%s to_buffer=%s',
+            ok,
+            self.success,
+            self.path_exists,
+            self.to_buffer,
+        )
+        return ok
 
 
     @property
     def success(self) -> bool:
 
-        return self.http_code == 200
+        success = self.http_code == 200
+        if not success:
+            logger.debug('HTTP status is not success: %s', self.http_code)
+        return success
 
 
     @property
     def path_exists(self) -> bool:
 
-        return self.path and os.path.exists(self.path)
+        exists = self.path and os.path.exists(self.path)
+        logger.debug('Path exists check path=%r exists=%s', self.path, bool(exists))
+        return exists
 
 
     @property
     def to_buffer(self) -> bool:
 
-        return isinstance(self._destination, io.BytesIO)
+        to_buffer = isinstance(self._destination, io.BytesIO)
+        logger.debug('Destination is buffer=%s', to_buffer)
+        return to_buffer
 
 
     def open(self, **kwargs) -> str | IO | dict[str, str | IO] | None:
@@ -236,6 +270,7 @@ class AbstractDownloader(abc.ABC):
                 self.opener = _open.Opener(self.path, **kwargs)
 
                 return self.opener.result
+        logger.warning('open called but downloader is not in ok state')
 
 
     def open_dest(self):
@@ -249,12 +284,14 @@ class AbstractDownloader(abc.ABC):
             _log(f'Opening destination for writing {dest}')
 
             self._destination = open(dest, 'wb')
+            logger.info('Opened file destination: %s', dest)
 
         else:
 
             _log(f'Creating buffer as download target')
 
             self._destination = io.BytesIO()
+            logger.info('Created in-memory buffer destination')
 
 
     def param(self, key: str) -> Any:
@@ -284,6 +321,7 @@ class AbstractDownloader(abc.ABC):
         """
 
         self.destination = destination or self.param('destination')
+        logger.debug('Set destination to %r', self.destination)
 
 
     def setup(self):
@@ -293,6 +331,7 @@ class AbstractDownloader(abc.ABC):
         """
 
         _log('Setting up downloader')
+        logger.info('Setting up downloader: %s', self.__class__.__name__)
         self.init_handler()
         self.set_options()
         self.open_dest()
@@ -300,6 +339,7 @@ class AbstractDownloader(abc.ABC):
         self.set_resp_headers()
         self.set_progress()
         _log('Finished setting up the downloader')
+        logger.debug('Downloader setup complete')
 
 
     @abc.abstractmethod
@@ -323,18 +363,21 @@ class AbstractDownloader(abc.ABC):
     def set_req_headers(self) -> None:
 
         _log(f'Setting request headers: {",".join(self.desc["headers"])}')
+        logger.debug('Request header count=%d', len(self.desc['headers']))
 
 
     def set_progress(self) -> None:
 
         self._downloaded = 0
         self._expected_size = 0
+        logger.debug('Progress counters reset')
 
 
     @abc.abstractmethod
     def set_resp_headers(self) -> None:
 
         self.resp_headers = []
+        logger.debug('Response headers container initialized')
 
 
     def post_download(self) -> None:
@@ -343,6 +386,12 @@ class AbstractDownloader(abc.ABC):
         self.parse_resp_headers()
         self.get_http_code()
         _log(f'HTTP status code {self.http_code}')
+        if self.http_code >= 400:
+            logger.error('HTTP request failed with status=%s', self.http_code)
+        elif self.http_code >= 300:
+            logger.warning('HTTP request finished with redirect status=%s', self.http_code)
+        else:
+            logger.info('HTTP request finished successfully with status=%s', self.http_code)
         _log('Finished post-download workflow')
 
 
@@ -353,11 +402,13 @@ class AbstractDownloader(abc.ABC):
             for key in ['Content-Disposition', 'Content-Type']
         })
         _log(f'Parsing response headers {cmutils.serialize(self.resp_headers)}')
+        logger.debug('Parsed response headers keys=%s', sorted(self.resp_headers.keys()))
 
 
     @staticmethod
     def parse_subheader(header: str) -> dict:
 
+        logger.debug('Parsing response subheader: %r', header)
         return (
             header
                 if isinstance(header, dict) else
@@ -368,7 +419,9 @@ class AbstractDownloader(abc.ABC):
     @property
     def path(self):
 
-        return getattr(self._destination, 'name', None)
+        path = getattr(self._destination, 'name', None)
+        logger.debug('Resolved destination path=%r', path)
+        return path
 
 
     @property
@@ -376,20 +429,29 @@ class AbstractDownloader(abc.ABC):
 
         if not self.ok and (epx := getattr(self, '_expected_size', 0)):
 
+            logger.debug('Using expected size fallback=%s', epx)
             return epx
 
         if (path := self.path) and os.path.exists(path):
 
-            return os.path.getsize(path)
+            size = os.path.getsize(path)
+            logger.debug('Computed size from file path=%s size=%s', path, size)
+            return size
 
         else:
 
-            return len(self._destination.getbuffer())
+            size = len(self._destination.getbuffer())
+            logger.debug('Computed size from in-memory buffer size=%s', size)
+            return size
 
 
     def _log_multipart(self) -> None:
 
         _log(f'Multipart form data {",".join(sorted(self.desc["multipart"].keys()))}')
+        logger.info(
+            'Multipart payload keys=%s',
+            sorted(self.desc['multipart'].keys()),
+        )
 
 
 class CurlDownloader(AbstractDownloader):
@@ -434,6 +496,13 @@ class CurlDownloader(AbstractDownloader):
 
         self._downloaded = downloaded
         self._expected_size = download_total
+        logger.debug(
+            'Curl progress downloaded=%s total=%s uploaded=%s upload_total=%s',
+            downloaded,
+            download_total,
+            uploaded,
+            upload_total,
+        )
 
 
     def init_handler(self):
@@ -443,6 +512,7 @@ class CurlDownloader(AbstractDownloader):
 
         _log('Creating pycurl object')
         self.handler = pycurl.Curl()
+        logger.info('Initialized pycurl handler')
 
 
     def download(self):
@@ -453,11 +523,18 @@ class CurlDownloader(AbstractDownloader):
 
         self.setup()
         _log('Performing download')
-        self.handler.perform()
-        self.post_download()
-        self.handler.close()
-        self._destination.seek(0)
-        self.close_dest()
+        logger.info('Starting curl download to destination=%r', self.destination)
+        try:
+            self.handler.perform()
+            self.post_download()
+            logger.info('Curl download finished with http_code=%s', self.http_code)
+        except Exception:
+            logger.exception('Curl download failed')
+            raise
+        finally:
+            self.handler.close()
+            self._destination.seek(0)
+            self.close_dest()
         _log('Download complete')
 
     def open_dest(self):
@@ -476,6 +553,7 @@ class CurlDownloader(AbstractDownloader):
         self.handler.setopt(pycurl.XFERINFOFUNCTION, self._progress)
         self.handler.setopt(pycurl.PROGRESSFUNCTION, self._progress)
         self.handler.setopt(pycurl.NOPROGRESS, 0)
+        logger.debug('Configured curl progress callbacks')
 
 
     def set_options(self):
@@ -485,6 +563,7 @@ class CurlDownloader(AbstractDownloader):
         """
 
         _log('Set parameters for Curl')
+        logger.debug('Configuring curl options from PARAMS list')
 
         for param in PARAMS:
 
@@ -495,10 +574,12 @@ class CurlDownloader(AbstractDownloader):
                     getattr(self.handler, param.upper()),
                     _curlopt.process(param, value),
                 )
+                logger.debug('Applied curl option %s=%r', param, value)
 
         if self.desc['post']:
 
             _log('Setting HTTP POST')
+            logger.info('Configuring curl POST request')
 
             if self.desc['multipart']:
 
@@ -520,6 +601,7 @@ class CurlDownloader(AbstractDownloader):
                         for name, value in params.items()
                     ]
                 )
+                logger.debug('Configured curl multipart post fields')
 
             else:
 
@@ -532,6 +614,7 @@ class CurlDownloader(AbstractDownloader):
                 )
 
                 self.handler.setopt(self.handler.POSTFIELDS, data)
+                logger.debug('Configured curl POSTFIELDS payload type=%s', type(data).__name__)
 
 
     def set_req_headers(self):
@@ -545,6 +628,7 @@ class CurlDownloader(AbstractDownloader):
             self.handler.HTTPHEADER,
             self.desc.headers_bytes,
         )
+        logger.debug('Configured curl request headers')
 
 
     def set_resp_headers(self):
@@ -557,11 +641,13 @@ class CurlDownloader(AbstractDownloader):
             self.handler.HEADERFUNCTION,
             self.resp_headers.append,
         )
+        logger.debug('Configured curl response header callback')
 
 
     def parse_resp_headers(self) -> None:
 
         if isinstance(self.resp_headers, list):
+            logger.debug('Converting curl response headers list to dict')
 
             self.resp_headers = dict(
                 (h.decode('utf-8').strip('\r\n').split(': ', 1) + [None])[:2]
@@ -575,6 +661,7 @@ class CurlDownloader(AbstractDownloader):
     def get_http_code(self) -> None:
 
         self.http_code = self.handler.getinfo(self.handler.HTTP_CODE)
+        logger.debug('curl HTTP code=%s', self.http_code)
 
 
 class RequestsDownloader(AbstractDownloader):
@@ -623,22 +710,29 @@ class RequestsDownloader(AbstractDownloader):
         self.setup()
 
         _log('Performing download')
+        logger.info('Starting requests download to destination=%r', self.destination)
         req = self.request.prepare()
 
-        with self.session.send(req, **self.send_args) as resp:
+        try:
+            with self.session.send(req, **self.send_args) as resp:
 
-            self.response = resp
-            self._expected_size = int(resp.headers.get('Content-Length', 0))
+                self.response = resp
+                self._expected_size = int(resp.headers.get('Content-Length', 0))
+                logger.debug('Expected size from header=%s', self._expected_size)
 
-            for chunk in resp.iter_content(1024):
+                for chunk in resp.iter_content(1024):
 
-                self._destination.write(chunk)
-                self._downloaded =+ len(chunk)
+                    self._destination.write(chunk)
+                    self._downloaded =+ len(chunk)
+        except Exception:
+            logger.exception('Requests download failed')
+            raise
 
         _log('Finished retrieving data')
         self._destination.seek(0)
         self.close_dest()
         self.post_download()
+        logger.info('Requests download finished with http_code=%s', self.http_code)
         _log('Download complete')
 
 
@@ -651,6 +745,7 @@ class RequestsDownloader(AbstractDownloader):
         self.session = requests.Session()
         self.request = requests.Request()
         self.send_args = {}
+        logger.info('Initialized requests Session and Request objects')
 
 
     def set_options(self):
@@ -660,6 +755,7 @@ class RequestsDownloader(AbstractDownloader):
         """
 
         _log('Setting parameters for Requests')
+        logger.debug('Configuring requests options')
         _log(f'Setting URL: `{self.desc["url"]}`')
         self.request.url = self.desc['url']
         self.send_args['allow_redirects'] = self.desc['followlocation']
@@ -667,10 +763,12 @@ class RequestsDownloader(AbstractDownloader):
             self.desc['connecttimeout'],
             self.desc['timeout'],
         )
+        logger.debug('Requests timeout config=%r', self.send_args['timeout'])
 
         if self.desc['post']:
 
             _log('Setting HTTP POST')
+            logger.info('Configuring requests POST request')
             self.request.method = 'POST'
 
             if self.desc['multipart']:
@@ -681,6 +779,7 @@ class RequestsDownloader(AbstractDownloader):
                     k: (v, open(v, 'rb'), mimetypes.guess_type(v)[0])
                     for k, v in self.desc['multipart']['files'].items()
                 }
+                logger.debug('Configured requests multipart files=%s', sorted(self.request.files.keys()))
 
             else:
 
@@ -692,12 +791,15 @@ class RequestsDownloader(AbstractDownloader):
                 )
 
             self.request.data = data
+            logger.debug('Configured requests POST data type=%s', type(data).__name__)
 
         else:
 
             self.request.method = 'GET'
+            logger.debug('Configured requests GET request')
 
         _log(f'send_args: [{cmutils.serialize(self.send_args)}]')
+        logger.debug('Requests send args=%r', self.send_args)
 
         # TODO: Figure out how to add these options in `requests` (if possible)
         #self.session.verify = self.desc['ssl_verifypeer']
@@ -713,19 +815,23 @@ class RequestsDownloader(AbstractDownloader):
         super().set_req_headers()
 
         self.request.headers.update(self.desc.headers_dict)
+        logger.debug('Configured requests headers count=%d', len(self.request.headers))
 
 
     def set_resp_headers(self) -> None:
 
         super().set_resp_headers()
+        logger.debug('Requests response headers placeholder initialized')
 
 
     def parse_resp_headers(self) -> None:
 
         self.resp_headers = dict(self.response.headers)
+        logger.debug('Captured requests response headers count=%d', len(self.resp_headers))
         super().parse_resp_headers()
 
 
     def get_http_code(self) -> None:
 
         self.http_code = self.response.status_code
+        logger.debug('requests HTTP code=%s', self.http_code)

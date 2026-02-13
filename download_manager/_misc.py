@@ -1,8 +1,12 @@
 import hashlib
+import logging
 
 from pypath_common import _misc
 
 __all__ = ['file_digest', 'parse_header']
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 
 def file_digest(fileobj, digest, /, *, _bufsize=2**18):
@@ -24,18 +28,23 @@ def file_digest(fileobj, digest, /, *, _bufsize=2**18):
     # On Linux we could use AF_ALG sockets and sendfile() to archive zero-copy
     # hashing with hardware acceleration.
 
+    logger.debug('Starting file_digest digest=%r bufsize=%d', digest, _bufsize)
+
     if isinstance(digest, str):
 
         digestobj = hashlib.new(digest)
+        logger.debug('Created digest object from algorithm name: %s', digest)
 
     else:
 
         digestobj = digest()
+        logger.debug('Created digest object from callable')
 
     if hasattr(fileobj, "getbuffer"):
 
         # io.BytesIO object, use zero-copy buffer
         digestobj.update(fileobj.getbuffer())
+        logger.info('Computed digest from in-memory buffer object')
 
         return digestobj
 
@@ -45,6 +54,7 @@ def file_digest(fileobj, digest, /, *, _bufsize=2**18):
         and hasattr(fileobj, "readable")
         and fileobj.readable()
     ):
+        logger.error('file_digest received non-readable binary file object: %r', fileobj)
 
         raise ValueError(
             f"'{fileobj!r}' is not a file-like object in binary reading mode."
@@ -64,6 +74,7 @@ def file_digest(fileobj, digest, /, *, _bufsize=2**18):
 
         digestobj.update(view[:size])
 
+    logger.info('Computed digest from stream/file object')
     return digestobj
 
 
@@ -82,9 +93,13 @@ def parse_header(header: str, keys: list[str] | None = None) -> dict:
     """
 
     keys = _misc.to_list(keys) or range(123)
-
-    return dict(
+    parsed = dict(
         ([str(key)] + [el.strip(" '\"") for el in elem.split('=')])[-2:]
         for elem, key in zip(header.split(';'), keys)
     )
-
+    logger.debug(
+        'Parsed header into %d elements from raw header=%r',
+        len(parsed),
+        header,
+    )
+    return parsed

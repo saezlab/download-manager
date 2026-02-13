@@ -22,10 +22,13 @@ __all__ = ['get_metadata']
 import os
 import pathlib
 import importlib.metadata
+import logging
 
 import toml
 
 _VERSION = '0.0.1'
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 
 def get_metadata():
@@ -37,6 +40,7 @@ def get_metadata():
     """
 
     here = pathlib.Path(__file__).parent
+    logger.debug('Resolving package metadata from %s', here)
     pyproj_toml = 'pyproject.toml'
     meta = {}
 
@@ -45,6 +49,7 @@ def get_metadata():
         toml_path = str(project_dir.joinpath(pyproj_toml).absolute())
 
         if os.path.exists(toml_path):
+            logger.info('Loading metadata from pyproject file: %s', toml_path)
 
             pyproject = toml.load(toml_path)
 
@@ -59,6 +64,7 @@ def get_metadata():
             break
 
     if not meta:
+        logger.warning('No local pyproject metadata found, trying installed metadata')
 
         try:
 
@@ -66,12 +72,15 @@ def get_metadata():
                 k.lower(): v for k, v in
                 importlib.metadata.metadata(here.name).items()
             }
+            logger.info('Loaded metadata from installed package')
 
         except importlib.metadata.PackageNotFoundError:
+            logger.error('Installed package metadata not found for %s', here.name)
 
             pass
 
     meta['version'] = meta.get('version', None) or _VERSION
+    logger.debug('Resolved package version=%s', meta['version'])
 
     return meta
 

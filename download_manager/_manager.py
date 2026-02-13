@@ -8,6 +8,7 @@ __all__ = [
 import io
 import os
 import datetime
+import logging
 
 from pypath_common import data as _data
 from cache_manager._status import Status
@@ -16,6 +17,9 @@ import cache_manager.utils as cmutils
 from . import _log, _downloader
 from ._descriptor import Descriptor
 from . import _constants
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 DL_ATTRS = {
     'query',
@@ -60,8 +64,19 @@ class DownloadManager:
             **kwargs,
     ):
 
+        logger.debug(
+            'Initializing DownloadManager path=%r pkg=%r config_type=%s',
+            path,
+            pkg,
+            type(config).__name__,
+        )
         self._set_config(config, **kwargs)
         self._set_cache(path=path, pkg=pkg)
+        logger.info(
+            'DownloadManager initialized cache_enabled=%s backend=%s',
+            self.cache is not None,
+            self.config.get('backend', 'requests'),
+        )
 
 
     def download(
@@ -102,6 +117,12 @@ class DownloadManager:
             file instance in the buffer.
         """
 
+        logger.debug(
+            'download called url_type=%s dest=%r kwargs_keys=%s',
+            type(url).__name__,
+            dest,
+            sorted(kwargs.keys()),
+        )
         *_, dest = self._download(
             url,
             dest=dest,
@@ -156,6 +177,11 @@ class DownloadManager:
             is located or the pointer to the file instance in the buffer.
         """
 
+        logger.info(
+            'Starting internal download flow retries=%s dest=%r',
+            retries or 1,
+            dest,
+        )
         _log('Starting the download')
         desc = (
             url
@@ -163,6 +189,7 @@ class DownloadManager:
             Descriptor(url, **kwargs)
         )
         backend = self.config.get('backend', 'requests').capitalize()
+        logger.debug('Resolved backend class prefix: %s', backend)
         downloader_cls = getattr(_downloader, f'{backend}Downloader')
 
         _log(f'Using backend: {backend}')
@@ -182,6 +209,7 @@ class DownloadManager:
 
         # Case 1)
         if isinstance(dest, str):
+            logger.info('Destination is explicit path: %s', dest)
 
             path = dest
             # to_buffer = False, keeps default
@@ -190,6 +218,11 @@ class DownloadManager:
 
         # Case 2)
         elif dest is True or dest is None:
+            logger.debug(
+                'Destination uses auto mode: dest=%r cache_available=%s',
+                dest,
+                self.cache is not None,
+            )
 
             cache = self.cache is not None
             to_buffer = not cache
@@ -198,6 +231,7 @@ class DownloadManager:
 
         # Case 3)
         elif dest is False:
+            logger.info('Destination forced to memory buffer')
 
             to_buffer = True
 
@@ -205,15 +239,27 @@ class DownloadManager:
 
         for i in range(retries or 1):
             _log(f'Attempt number {i}')
+            logger.info('Download attempt %d/%d', i + 1, retries or 1)
 
             if cache:
 
                 item = self._get_cache_item(desc, newer_than, older_than)
                 path = item.path
                 _log(f'Cache path: {path}')
+                logger.debug(
+                    'Cache returned item key=%s status=%s path=%s',
+                    getattr(item, 'key', None),
+                    getattr(item, 'rstatus', None),
+                    path,
+                )
 
             # Instantiate the downloader (no download yet)
             downloader = downloader_cls(desc, path)
+            logger.debug(
+                'Instantiated downloader %s with path=%r',
+                downloader_cls.__name__,
+                path,
+            )
 
             # Perform the download or break the loop when ok or already in cache
             if not item or item.rstatus == Status.UNINITIALIZED.value:
@@ -225,13 +271,31 @@ class DownloadManager:
 
                 if downloader.ok:
                     _log(f'Download was successful')
+                    logger.info(
+                        'Download succeeded http_code=%s path=%r to_buffer=%s',
+                        downloader.http_code,
+                        path,
+                        to_buffer,
+                    )
                     break
+                logger.warning(
+                    'Download attempt %d completed but not successful http_code=%s',
+                    i + 1,
+                    downloader.http_code,
+                )
 
             else:
                 _log(f'Item retrieved from cache: {path}')
+                logger.info('Using cached item at %s', path)
                 break
 
         _log('Finished the download')
+        if downloader and not downloader.ok:
+            logger.error(
+                'All download attempts exhausted or failed http_code=%s',
+                downloader.http_code,
+            )
+        logger.debug('Finished internal download flow')
 
         return (
             desc,
@@ -268,6 +332,7 @@ class DownloadManager:
         """
 
         if self.cache is not None:
+            logger.debug('Querying cache for descriptor baseurl=%s', desc['baseurl'])
 
             dl_params = {key: desc[key] for key in DL_ATTRS if key in desc}
             desc_params = dict(desc)
@@ -285,8 +350,14 @@ class DownloadManager:
             )
 
             _log(f'Cache item: {item.__repr__()}')
+            logger.info(
+                'Cache item selected key=%s status=%s',
+                getattr(item, 'key', None),
+                getattr(item, 'rstatus', None),
+            )
 
             return item
+        logger.debug('Cache not configured; skipping cache lookup')
 
 
     def _report_finished(
@@ -306,6 +377,10 @@ class DownloadManager:
         """
 
         if item is not None:
+            logger.debug(
+                'Reporting finished download for cache item key=%s',
+                getattr(item, 'key', None),
+            )
 
             item.status = (
                 Status.READY.value
@@ -339,6 +414,14 @@ class DownloadManager:
             )
 
             item.update(**args)
+            logger.info(
+                'Cache metadata updated key=%s status=%s http_code=%s',
+                getattr(item, 'key', None),
+                item.status,
+                downloader.http_code,
+            )
+        else:
+            logger.debug('No cache item to update in _report_finished')
 
 
     def _report_started(self, item: cm.CacheItem | None):
@@ -347,10 +430,16 @@ class DownloadManager:
         """
 
         if item:
+            logger.debug(
+                'Reporting started download for cache item key=%s',
+                getattr(item, 'key', None),
+            )
 
             item.status = Status.WRITE.value
             item.update_date('download_started')
             item.update_date()
+        else:
+            logger.debug('No cache item to mark started')
 
 
     def _set_cache(self, path: str | None, pkg: str | None = None):
@@ -370,10 +459,12 @@ class DownloadManager:
         pkg = pkg or self.config.get('pkg', None)
 
         if path or pkg:
+            logger.info('Initializing cache manager path=%r pkg=%r', path, pkg)
 
             self.cache = cm.Cache(path=path, pkg=pkg)
 
         else:
+            logger.info('Cache manager disabled (no path/pkg provided)')
 
             self.cache = None
 
@@ -392,9 +483,13 @@ class DownloadManager:
         """
 
         if isinstance(config, str) and os.path.exists(config):
+            logger.info('Loading manager config file from %s', config)
 
             config = _data.load(config)
+        elif isinstance(config, str):
+            logger.warning('Config path does not exist: %s', config)
 
         config = config or {}
         config.update(kwargs)
         self.config = config
+        logger.debug('Manager config keys: %s', sorted(self.config.keys()))
