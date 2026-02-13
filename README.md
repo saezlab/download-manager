@@ -57,6 +57,73 @@ filepath = manager.download('https://www.google.com')
 print(f"Cached at {filepath}")
 ```
 
+## Architecture and Internals
+
+The package is built around four core components:
+
+- `DownloadManager`: orchestrates cache lookup, backend selection, retries, and metadata updates.
+- `Descriptor`: normalizes request parameters (URL, query, headers, JSON, multipart, TLS CA path).
+- `RequestsDownloader` and `CurlDownloader`: backend-specific implementations of the download workflow.
+- `cache_manager`: optional persistence layer for file reuse and download metadata.
+
+### Component Diagram
+
+```mermaid
+flowchart LR
+    U[User code] --> M[DownloadManager]
+    M --> D[Descriptor]
+    M --> C[(cache_manager Cache)]
+    M --> B{backend}
+    B --> R[RequestsDownloader]
+    B --> P[CurlDownloader]
+    D --> R
+    D --> P
+    R --> OUT[Path or BytesIO]
+    P --> OUT
+    M --> OUT
+```
+
+### Runtime Flow
+
+1. Build or accept a `Descriptor`.
+2. Resolve backend from config (`requests` by default).
+3. Resolve destination policy:
+   - `dest='/path/file'`: force download to that path.
+   - `dest=None` or `dest=True`: use cache path if cache is configured, otherwise memory buffer.
+   - `dest=False`: force memory buffer.
+4. If cache is enabled, look up best matching item with URI + relevant download params.
+5. If no valid cached item exists, perform download and update cache metadata (status, timestamps, response headers, checksum, size, HTTP code).
+6. Return either path or `io.BytesIO`.
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant M as DownloadManager
+    participant C as Cache
+    participant X as Backend Downloader
+
+    U->>M: download(url, dest, kwargs)
+    M->>M: Build Descriptor
+    M->>C: best_or_new(...) if cache enabled
+    alt cache hit
+        M-->>U: return cached path
+    else cache miss/uninitialized
+        M->>X: instantiate(desc, path_or_none)
+        M->>X: download()
+        X-->>M: headers, status, bytes/file
+        M->>C: update metadata
+        M-->>U: return path or BytesIO
+    end
+```
+
+### Practical Usage Patterns
+
+- **In-memory processing**: use `dest=False` to get `io.BytesIO`.
+- **Forced file output**: pass explicit `dest='/tmp/file.ext'`.
+- **Cache-first retrieval**: initialize `DownloadManager(path='/tmp/cache')` and call `download(url)` without `dest`.
+- **POST/JSON**: pass `query={...}` with `post=True` or `json=True`.
+- **Multipart uploads**: pass `multipart={...}` with file paths included in the mapping.
+
 ## API Overview
 
 - `DownloadManager`: Main interface for downloads and cache management.
