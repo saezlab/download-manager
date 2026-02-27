@@ -8,9 +8,11 @@ __all__ = [
 import io
 import os
 import datetime
+from pathlib import Path
 
 from pypath_common import data as _data
 from cache_manager._status import Status
+from cache_manager import _freshness as cm_freshness
 import cache_manager as cm
 import cache_manager.utils as cmutils
 from . import _log, _downloader
@@ -70,6 +72,10 @@ class DownloadManager:
             dest: str | bool | None = None,
             newer_than: str | datetime.datetime | None = None,
             older_than: str | datetime.datetime | None = None,
+            check_freshness: bool = False,
+            check_method: str = 'auto',
+            force_download: bool = False,
+            keep_old: bool = True,
             **kwargs,
     ) -> str | io.BytesIO | None:
         """
@@ -107,6 +113,10 @@ class DownloadManager:
             dest=dest,
             newer_than=newer_than,
             older_than=older_than,
+            check_freshness=check_freshness,
+            check_method=check_method,
+            force_download=force_download,
+            keep_old=keep_old,
             **kwargs
         )
 
@@ -119,6 +129,10 @@ class DownloadManager:
             dest: str | bool | None = None,
             newer_than: str | datetime.datetime | None = None,
             older_than: str | datetime.datetime | None = None,
+            check_freshness: bool = False,
+            check_method: str = 'auto',
+            force_download: bool = False,
+            keep_old: bool = True,
             retries: int | None = None,
             **kwargs,
     ) -> tuple[Descriptor, cm.CacheItem, str | io.BytesIO | None]:
@@ -167,6 +181,8 @@ class DownloadManager:
 
         _log(f'Using backend: {backend}')
 
+        show_progress = self.config.get('progress', True)
+
         item = None
         downloader = None
 
@@ -212,18 +228,96 @@ class DownloadManager:
                 path = item.path
                 _log(f'Cache path: {path}')
 
+            # Use existing local file when possible
+            if (
+                path and
+                os.path.exists(path) and
+                not force_download and
+                (
+                    item is None or
+                    item.rstatus != Status.UNINITIALIZED.value
+                )
+            ):
+
+                _log(f'Local file exists: {path}')
+
+                if not check_freshness:
+
+                    _log('Using existing local file from cache')
+                    break
+
+                _log('Checking if remote version is newer')
+                remote_headers = cm_freshness.get_remote_headers(
+                    desc['url'],
+                    timeout=self.config.get('timeout', 30),
+                )
+
+                if remote_headers:
+
+                    local_metadata = cm_freshness.metadata_from_item(item)
+                    is_current, reason = cm_freshness.check_freshness(
+                        path,
+                        remote_headers,
+                        local_metadata,
+                        check_method,
+                    )
+                    _log(
+                        f'Freshness check result: {is_current}, '
+                        f'reason: {reason}'
+                    )
+
+                    if is_current:
+
+                        _log('Local file is current, using cached version')
+                        break
+
+                    _log('Remote version is newer, downloading')
+
+                    if keep_old:
+
+                        timestamp = datetime.datetime.now().strftime(
+                            '%Y%m%d_%H%M%S'
+                        )
+                        existing_path = Path(path)
+                        old_path = existing_path.parent / (
+                            f'{existing_path.stem}_{timestamp}'
+                            f'{existing_path.suffix}'
+                        )
+                        existing_path.rename(old_path)
+                        _log(f'Renamed old file to: {old_path}')
+
+                    if item is not None:
+
+                        item.status = Status.UNINITIALIZED.value
+
+                else:
+
+                    _log(
+                        'Could not get remote headers for freshness check; '
+                        'redownloading'
+                    )
+
+                    if item is not None:
+
+                        item.status = Status.UNINITIALIZED.value
+
             # Instantiate the downloader (no download yet)
-            downloader = downloader_cls(desc, path)
+            downloader = downloader_cls(desc, path, progress=show_progress)
 
             # Perform the download or break the loop when ok or already in cache
-            if not item or item.rstatus == Status.UNINITIALIZED.value:
+            if (
+                force_download or
+                not item or
+                item.rstatus == Status.UNINITIALIZED.value
+            ):
                 _log(f'No valid version in cache, starting download')
 
                 self._report_started(item)
                 downloader.download()
-                self._report_finished(item, downloader)
+                self._report_finished(item, downloader, desc)
 
                 if downloader.ok:
+
                     _log(f'Download was successful')
                     break
 
@@ -292,7 +386,8 @@ class DownloadManager:
     def _report_finished(
         self,
         item: cm.CacheItem,
-        downloader: cm.Downloader.AbstractDownloader
+        downloader: cm.Downloader.AbstractDownloader,
+        desc: Descriptor,
     ):
         """
         Updates the cache entry relevant entries when a download has
@@ -316,9 +411,14 @@ class DownloadManager:
             item.accessed()
             item.update_date()
 
+            method = 'POST' if desc.get('post') else 'GET'
+            headers = downloader.resp_headers or {}
+
             args = {
                 'attrs': {
-                    "resp_headers": downloader.resp_headers
+                    'resp_headers': headers,
+                    'url': desc['url'],
+                    'download_method': method,
                 },
             }
 
@@ -333,8 +433,23 @@ class DownloadManager:
             args['attrs']['sha256'] = downloader.sha256
             args['attrs']['size'] = downloader.size
             args['attrs']['http_code'] = downloader.http_code
+
+            if method == 'POST':
+                args['attrs']['post_data'] = desc.get('query')
+            else:
+                args['attrs']['query_params'] = desc.get('query')
+
+            if etag := headers.get('ETag') or headers.get('etag'):
+                args['attrs']['etag'] = etag
+
+            if (
+                last_modified :=
+                headers.get('Last-Modified') or headers.get('last-modified')
+            ):
+                args['attrs']['last_modified'] = last_modified
+
             _log(
-                f'Saving download metadata to cache.'
+                f'Saving download metadata to cache. '
                 f'Size = {downloader.size}, HTTP code = {downloader.http_code}'
             )
 
