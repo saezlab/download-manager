@@ -12,9 +12,13 @@ from pathlib import Path
 
 from pypath_common import data as _data
 from cache_manager._status import Status
-from cache_manager import _freshness as cm_freshness
 import cache_manager as cm
 import cache_manager.utils as cmutils
+
+try:
+    from cache_manager import _freshness as cm_freshness
+except ImportError:
+    cm_freshness = None
 from . import _log, _downloader
 from ._descriptor import Descriptor
 from . import _constants
@@ -244,6 +248,14 @@ class DownloadManager:
                 if not check_freshness:
 
                     _log('Using existing local file from cache')
+                    break
+
+                if cm_freshness is None:
+
+                    _log(
+                        'Freshness check requested but cache_manager '
+                        'freshness module is unavailable; using cached file'
+                    )
                     break
 
                 _log('Checking if remote version is newer')
