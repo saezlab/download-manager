@@ -7,7 +7,7 @@ __all__ = [
     'RequestsDownloader',
 ]
 
-from typing import Any
+from typing import Any, IO
 import io
 import os
 import abc
@@ -17,10 +17,12 @@ import urllib.parse as urlparse
 import json
 import mimetypes
 import hashlib
+import time
 from ._misc import file_digest
 
 import pycurl
 import requests
+import tqdm
 
 from cache_manager import _open
 from cache_manager import utils as cmutils
@@ -70,17 +72,25 @@ class AbstractDownloader(abc.ABC):
             self,
             desc: _descriptor.Descriptor,
             destination: str | None = None,
+            progress: bool = True,
     ):
         super().__init__()
         self.desc = desc
         self._downloaded = 0
         self._expected_size = 0
         self.http_code = 0
+        self._progress_bar = None
+        self._show_progress = progress
+        self._progress_pending = 0
+        self._progress_min_chunk = 64 * 1024
+        self._progress_min_interval = 0.1
+        self._last_progress_update = 0.0
         self.set_destination(destination)
 
 
     def __del__(self):
 
+        self.close_progress()
         self.close_dest()
 
     @property
@@ -329,6 +339,84 @@ class AbstractDownloader(abc.ABC):
 
         self._downloaded = 0
         self._expected_size = 0
+        self._progress_pending = 0
+        self._last_progress_update = time.monotonic()
+
+        if self._progress_bar is not None:
+            self.close_progress()
+
+    def init_progress(self, total: int | None = None, desc: str = 'Downloading') -> None:
+
+        if not self._show_progress:
+            return
+
+        if self._progress_bar is None:
+            self._progress_bar = tqdm.tqdm(
+                total=total,
+                unit='B',
+                unit_scale=True,
+                unit_divisor=1024,
+                desc=desc,
+                leave=True,
+                dynamic_ncols=True,
+            )
+            return
+
+        if desc and self._progress_bar.desc != desc:
+            self._progress_bar.set_description(desc, refresh=False)
+
+        if total is not None:
+            self._progress_bar.total = total
+
+    def update_progress(self, n: int, force: bool = False) -> None:
+
+        if not self._show_progress:
+            return
+
+        if n > 0:
+            if self._progress_bar is None:
+                total = self._expected_size or None
+                self.init_progress(total=total)
+
+            if self._progress_bar is None:
+                return
+
+            self._progress_pending += n
+        elif self._progress_bar is None:
+            return
+
+        now = time.monotonic()
+        should_flush = force or (
+            self._progress_pending >= self._progress_min_chunk
+            or (now - self._last_progress_update) >= self._progress_min_interval
+        )
+
+        if not should_flush:
+            return
+
+        if self._progress_pending > 0:
+            self._progress_bar.update(self._progress_pending)
+            self._progress_pending = 0
+
+        if force:
+            self._progress_bar.refresh()
+
+        self._last_progress_update = now
+
+    def set_progress_total(self, total: int) -> None:
+
+        if total <= 0 or not self._show_progress:
+            return
+
+        self.init_progress(total=total)
+
+    def close_progress(self) -> None:
+
+        self.update_progress(0, force=True)
+
+        if self._progress_bar is not None:
+            self._progress_bar.close()
+            self._progress_bar = None
 
 
     @abc.abstractmethod
@@ -419,9 +507,10 @@ class CurlDownloader(AbstractDownloader):
         self,
         desc: _descriptor.Descriptor,
         destination: str | None = None,
+        progress: bool = True,
     ):
 
-        super().__init__(desc, destination)
+        super().__init__(desc, destination, progress)
 
 
     def _progress(
@@ -432,8 +521,22 @@ class CurlDownloader(AbstractDownloader):
         uploaded: int,
     ) -> None:
 
+        if self._show_progress and self._progress_bar is None:
+            initial_total = download_total if download_total > 0 else None
+            self.init_progress(total=initial_total)
+
+        if download_total > 0 and self._expected_size != download_total:
+            self._expected_size = download_total
+            self.set_progress_total(download_total)
+
+        if downloaded > self._downloaded:
+            delta = downloaded - self._downloaded
+            force_flush = download_total > 0 and downloaded >= download_total
+            self.update_progress(delta, force=force_flush)
+        elif download_total > 0 and downloaded >= download_total:
+            self.update_progress(0, force=True)
+
         self._downloaded = downloaded
-        self._expected_size = download_total
 
 
     def init_handler(self):
@@ -456,6 +559,7 @@ class CurlDownloader(AbstractDownloader):
         self.handler.perform()
         self.post_download()
         self.handler.close()
+        self.close_progress()
         self._destination.seek(0)
         self.close_dest()
         _log('Download complete')
@@ -609,9 +713,10 @@ class RequestsDownloader(AbstractDownloader):
         self,
         desc: _descriptor.Descriptor,
         destination: str | None = None,
+        progress: bool = True,
     ):
 
-        super().__init__(desc, destination)
+        super().__init__(desc, destination, progress)
 
 
     def download(self):
@@ -630,12 +735,30 @@ class RequestsDownloader(AbstractDownloader):
             self.response = resp
             self._expected_size = int(resp.headers.get('Content-Length', 0))
 
+            progress_desc = 'Downloading'
+            if self.desc['url']:
+                progress_desc = os.path.basename(
+                    urlparse.urlparse(self.desc['url']).path
+                ) or 'Downloading'
+
+            if self._show_progress:
+                self.init_progress(
+                    total=self._expected_size or None,
+                    desc=progress_desc,
+                )
+
             for chunk in resp.iter_content(1024):
 
+                if not chunk:
+                    continue
+
                 self._destination.write(chunk)
-                self._downloaded =+ len(chunk)
+                chunk_size = len(chunk)
+                self._downloaded += chunk_size
+                self.update_progress(chunk_size)
 
         _log('Finished retrieving data')
+        self.close_progress()
         self._destination.seek(0)
         self.close_dest()
         self.post_download()
