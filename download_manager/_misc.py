@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import hashlib
 
 from pypath_common import _misc
@@ -87,4 +89,3 @@ def parse_header(header: str, keys: list[str] | None = None) -> dict:
         ([str(key)] + [el.strip(" '\"") for el in elem.split('=')])[-2:]
         for elem, key in zip(header.split(';'), keys)
     )
-
