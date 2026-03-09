@@ -1,0 +1,58 @@
+name: 📔 Documentation Improvement
+description: Report wrong or missing documentation
+
+title: "[DOC]: "
+labels:
+  - "docs"
+  - "triage"
+projects: ["download-manager/1"]
+
+body:
+#----------------   Location of the documentation --------------
+  - type: textarea
+    id: location
+    attributes:
+      label: Location of the documentation
+      description: >
+        Please provide the location of the documentation. This could be a URL to the documentation page or a specific section within the documentation where you found the issue.
+         For example, if the issue is in the API reference, please provide the URL to that specific page. If it's in the README, please specify that as well.
+         If you're unsure about the exact location, please provide as much detail as possible to help us find it.
+         For example, you could say "The issue is in the API reference section under the 'DownloadManager' class" or "The issue is in the README under the 'Installation' section".
+      placeholder: readme, API reference, etc.
+    validations:
+      required: true
+
+#----------------   Problem Description --------------
+  - type: textarea
+    id: problem
+    attributes:
+      label: Documentation problem
+      description: >
+        Please provide a description of what documentation you believe needs to be fixed/improved
+    validations:
+      required: true
+
+#----------------   Suggested Fix  --------------
+  - type: textarea
+    id: suggested-fix
+    attributes:
+      label: Suggested fix for documentation
+      description: >
+        Please explain the suggested fix and **why** it's better than the existing documentation
+    validations:
+      required: true
+
+#--------------   Code of Conduct   --------------
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/saezlab/download-manager/blob/main/CODE_OF_CONDUCT.md).
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
+
+  - type: markdown
+    attributes:
+      value: >
+        Thank you for your contribution! 🎉 – Saezlab Team

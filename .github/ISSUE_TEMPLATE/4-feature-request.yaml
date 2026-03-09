@@ -1,0 +1,67 @@
+name: ✨ Feature Request
+description: Submit a proposal/request for a new download-manager feature
+
+title: "[FEAT]: "
+labels:
+  - "feature"
+projects: ["download-manager/1"]
+
+body:
+  - type: markdown
+    attributes:
+      value: >
+        **Note:** Please write your bug report in English to ensure it can be understood and addressed by the development team.
+
+  #--------------   Feature type    --------------
+  - type: dropdown
+    id: feature-type
+    attributes:
+      label: Feature Type
+      description: Please select what type of feature request you would like to propose.
+      options:
+        - Add new functionality to download-manager
+        - Change existing functionality in download-manager
+        - Remove existing functionality in download-manager
+      multiple: false
+    validations:
+      required: true
+
+  #--------------   Feature description and motivation    --------------
+  - type: textarea
+    attributes:
+      label: 🚀 The feature and motivation
+      description: >
+        Provide a clear and concise summary of the proposed feature, including the motivation behind it.
+        If your request addresses a specific problem, describe it (e.g., "I'm working on X and need Y to be achievable").
+        If this is connected to an existing GitHub issue, please include a link.
+      placeholder: |
+        **Feature description**
+          As user I want to be able to do X with download-manager so that I can achieve Y.
+
+        **Motivation**
+          This feature would be useful for Z because...
+
+    validations:
+      required: true
+
+  #--------------   Additional context    --------------
+  - type: textarea
+    attributes:
+      label: Additional context
+      description: >
+        Add any other context or screenshots about the feature request.
+
+  #--------------   Code of Conduct   --------------
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/saezlab/download-manager/blob/main/CODE_OF_CONDUCT.md).
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
+
+  - type: markdown
+    attributes:
+      value: >
+        Thank you for your contribution! 🎉 – Saezlab Team
