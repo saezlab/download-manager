@@ -14,12 +14,15 @@ from pypath_common import data as _data
 from cache_manager._status import Status
 import cache_manager as cm
 import cache_manager.utils as cmutils
+import logging
 
 try:
     from cache_manager import _freshness as cm_freshness
 except ImportError:
     cm_freshness = None
-from . import _log, _downloader
+from . import (
+    _downloader,
+)
 from ._descriptor import Descriptor
 from . import _constants
 
@@ -31,6 +34,9 @@ DL_ATTRS = {
     'headers',
 }
 
+#--- Module logger 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 class DownloadManager:
     """
@@ -66,7 +72,7 @@ class DownloadManager:
             **kwargs,
     ):
 
-        _log('Creating DownloadManager')
+        logger.debug('Creating DownloadManager')
         self._set_config(config, **kwargs)
         self._set_cache(path=path, pkg=pkg)
 
@@ -175,7 +181,7 @@ class DownloadManager:
             is located or the pointer to the file instance in the buffer.
         """
 
-        _log('Starting the download')
+        logger.info('Starting the download')
         desc = (
             url
                 if isinstance(url, Descriptor) else
@@ -184,7 +190,7 @@ class DownloadManager:
         backend = self.config.get('backend', 'requests').capitalize()
         downloader_cls = getattr(_downloader, f'{backend}Downloader')
 
-        _log(f'Using backend: {backend}')
+        logger.debug(f'Using backend: {backend}')
 
         show_progress = self.config.get('progress', True)
 
@@ -207,7 +213,7 @@ class DownloadManager:
             path = dest
             # to_buffer = False, keeps default
 
-            _log(f'Downloading to path: {path}')
+            logger.debug(f'Downloading to path: {path}')
 
         # Case 2)
         elif dest is True or dest is None:
@@ -215,23 +221,23 @@ class DownloadManager:
             cache = self.cache is not None
             to_buffer = not cache
 
-            _log(f'Cache is available {cache}')
+            logger.debug(f'Cache is available {cache}')
 
         # Case 3)
         elif dest is False:
 
             to_buffer = True
 
-        _log(f'Downloading to buffer {to_buffer}')
+        logger.debug(f'Downloading to buffer {to_buffer}')
 
         for i in range(retries or 1):
-            _log(f'Attempt number {i}')
+            logger.debug(f'Attempt number {i}')
 
             if cache:
 
                 item = self._get_cache_item(desc, newer_than, older_than)
                 path = item.path
-                _log(f'Cache path: {path}')
+                logger.debug(f'Cache path: {path}')
 
             # Use existing local file when possible
             if (
@@ -244,22 +250,24 @@ class DownloadManager:
                 )
             ):
 
-                _log(f'Local file exists: {path}')
+
+                logger.debug(f'Local file exists: {path}')
 
                 if not check_freshness:
 
-                    _log('Using existing local file from cache')
+                    logger.info('Using existing local file from cache')
                     break
 
                 if cm_freshness is None:
 
-                    _log(
+                    logger.warning(
                         'Freshness check requested but cache_manager '
                         'freshness module is unavailable; using cached file'
                     )
                     break
 
-                _log('Checking if remote version is newer')
+
+                logger.debug('Checking if remote version is newer')
                 remote_headers = cm_freshness.get_remote_headers(
                     desc['url'],
                     timeout=self.config.get('timeout', 30),
@@ -274,17 +282,20 @@ class DownloadManager:
                         local_metadata,
                         check_method,
                     )
-                    _log(
+
+                    logger.debug(
                         f'Freshness check result: {is_current}, '
                         f'reason: {reason}'
                     )
 
                     if is_current:
 
-                        _log('Local file is current, using cached version')
+
+                        logger.info('Local file is current, using cached version')
                         break
 
-                    _log('Remote version is newer, downloading')
+
+                    logger.info('Remote version is newer, downloading')
 
                     if keep_old:
 
@@ -297,7 +308,8 @@ class DownloadManager:
                             f'{existing_path.suffix}'
                         )
                         existing_path.rename(old_path)
-                        _log(f'Renamed old file to: {old_path}')
+
+                        logger.info(f'Renamed old file to: {old_path}')
 
                     if item is not None:
 
@@ -305,7 +317,7 @@ class DownloadManager:
 
                 else:
 
-                    _log(
+                    logger.warning(
                         'Could not get remote headers for freshness check; '
                         'redownloading'
                     )
@@ -323,7 +335,8 @@ class DownloadManager:
                 not item or
                 item.rstatus == Status.UNINITIALIZED.value
             ):
-                _log(f'No valid version in cache, starting download')
+
+                logger.info('No valid version in cache, starting download')
 
                 self._report_started(item)
                 downloader.download()
@@ -331,14 +344,17 @@ class DownloadManager:
 
                 if downloader.ok:
 
-                    _log(f'Download was successful')
+
+                    logger.info('Download was successful')
                     break
 
             else:
-                _log(f'Item retrieved from cache: {path}')
+
+                logger.info(f'Item retrieved from cache: {path}')
                 break
 
-        _log('Finished the download')
+
+        logger.info('Finished the download')
 
         return (
             desc,
@@ -378,8 +394,9 @@ class DownloadManager:
 
             dl_params = {key: desc[key] for key in DL_ATTRS if key in desc}
             desc_params = dict(desc)
-            _log(f'DL_PARAMS: {cmutils.serialize(dl_params)}')
-            _log(f'DESC_PARAMS: {cmutils.serialize(desc_params)}')
+
+            logger.debug(f'DL_PARAMS: {cmutils.serialize(dl_params)}')
+            logger.debug(f'DESC_PARAMS: {cmutils.serialize(desc_params)}')
 
             item = self.cache.best_or_new(
                 uri = desc['baseurl'],
@@ -391,7 +408,7 @@ class DownloadManager:
                 status = {Status.READY.value, Status.WRITE.value},
             )
 
-            _log(f'Cache item: {item.__repr__()}')
+            logger.debug(f'Cache item: {item.__repr__()}')
 
             return item
 
@@ -461,7 +478,8 @@ class DownloadManager:
             ):
                 args['attrs']['last_modified'] = last_modified
 
-            _log(
+
+            logger.debug(
                 f'Saving download metadata to cache. '
                 f'Size = {downloader.size}, HTTP code = {downloader.http_code}'
             )

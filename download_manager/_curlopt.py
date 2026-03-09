@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from typing import Any
 import re
+import logging
 
 import pycurl
+
 
 __all__ = [
     'SYNONYMS',
@@ -14,6 +16,9 @@ __all__ = [
 
 SYNONYMS = {}
 
+#--- Module logger 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 def ensure_int(value: Any) -> int | str | None:
     """

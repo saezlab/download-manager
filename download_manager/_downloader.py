@@ -18,6 +18,7 @@ import json
 import mimetypes
 import hashlib
 import time
+import logging
 from ._misc import file_digest
 
 import pycurl
@@ -30,7 +31,6 @@ from cache_manager import utils as cmutils
 from . import _data
 from . import _curlopt
 from . import _descriptor
-from . import _log
 from . import _misc
 
 PARAMS = [
@@ -48,6 +48,9 @@ PARAMS = [
     'ignore_content_length',
 ]
 
+#--- Module logger 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 class AbstractDownloader(abc.ABC):
     """
@@ -180,7 +183,6 @@ class AbstractDownloader(abc.ABC):
             and not isinstance(self._destination, io.BytesIO)
         ):
 
-            _log('Closing destination.')
             self._destination.close()
 
 
@@ -233,16 +235,17 @@ class AbstractDownloader(abc.ABC):
 
             if self.to_buffer:
 
-                _log('Returning buffer')
+                logger.debug('Returning buffer')
 
                 return self._destination
 
             else:
 
-                _log(
+                logger.debug(
                     f'Opening path {self.path} with '
                     f'{cmutils.serialize(kwargs)}'
                 )
+
                 self.opener = _open.Opener(self.path, **kwargs)
 
                 return self.opener.result
@@ -256,13 +259,13 @@ class AbstractDownloader(abc.ABC):
 
         if dest := self.destination:
 
-            _log(f'Opening destination for writing {dest}')
+            logger.debug(f'Opening destination for writing {dest}')
 
             self._destination = open(dest, 'wb')
 
         else:
 
-            _log(f'Creating buffer as download target')
+            logger.debug('Creating buffer as download target')
 
             self._destination = io.BytesIO()
 
@@ -302,15 +305,14 @@ class AbstractDownloader(abc.ABC):
         initializing the download handler, configuration options, headers, etc.
         """
 
-        _log('Setting up downloader')
+        logger.debug('Setting up downloader')
         self.init_handler()
         self.set_options()
         self.open_dest()
         self.set_req_headers()
         self.set_resp_headers()
         self.set_progress()
-        _log('Finished setting up the downloader')
-
+        logger.debug('Finished setting up the downloader')
 
     @abc.abstractmethod
     def download(self) -> None:
@@ -332,7 +334,7 @@ class AbstractDownloader(abc.ABC):
 
     def set_req_headers(self) -> None:
 
-        _log(f'Setting request headers: {",".join(self.desc["headers"])}')
+        logger.debug(f'Setting request headers: {",".join(self.desc["headers"])}')
 
 
     def set_progress(self) -> None:
@@ -427,11 +429,15 @@ class AbstractDownloader(abc.ABC):
 
     def post_download(self) -> None:
 
-        _log('Post-download workflow started')
+        logger.debug('Post-download workflow started')
         self.parse_resp_headers()
         self.get_http_code()
-        _log(f'HTTP status code {self.http_code}')
-        _log('Finished post-download workflow')
+        if self.http_code >= 400:
+            logger.warning(f'HTTP status code {self.http_code}')
+        else:
+            logger.info(f'HTTP status code {self.http_code}')
+
+        logger.debug('Finished post-download workflow')
 
 
     def parse_resp_headers(self) -> None:
@@ -440,7 +446,7 @@ class AbstractDownloader(abc.ABC):
             key: self.parse_subheader(self.resp_headers.get(key, ''))
             for key in ['Content-Disposition', 'Content-Type']
         })
-        _log(f'Parsing response headers {cmutils.serialize(self.resp_headers)}')
+        logger.debug(f'Parsing response headers {cmutils.serialize(self.resp_headers)}')
 
 
     @staticmethod
@@ -477,7 +483,7 @@ class AbstractDownloader(abc.ABC):
 
     def _log_multipart(self) -> None:
 
-        _log(f'Multipart form data {",".join(sorted(self.desc["multipart"].keys()))}')
+        logger.debug(f'Multipart form data {",".join(sorted(self.desc["multipart"].keys()))}')
 
 
 class CurlDownloader(AbstractDownloader):
@@ -544,7 +550,7 @@ class CurlDownloader(AbstractDownloader):
         Initializes the `curl`-based donwload handler.
         """
 
-        _log('Creating pycurl object')
+        logger.debug('Creating pycurl object')
         self.handler = pycurl.Curl()
 
 
@@ -555,14 +561,14 @@ class CurlDownloader(AbstractDownloader):
         """
 
         self.setup()
-        _log('Performing download')
+        logger.info('Performing download')
         self.handler.perform()
         self.post_download()
         self.handler.close()
         self.close_progress()
         self._destination.seek(0)
         self.close_dest()
-        _log('Download complete')
+        logger.info('Download complete')
 
     def open_dest(self):
         """
@@ -588,12 +594,12 @@ class CurlDownloader(AbstractDownloader):
         download methods (get/post) based on the provided `Descriptor` instance.
         """
 
-        _log('Set parameters for Curl')
+        logger.debug('Set parameters for Curl')
 
         for param in PARAMS:
 
             if (value := self.desc[param]) is not None:
-                _log(f'Curl parameter: {param} = {value}')
+                logger.debug(f'Curl parameter: {param} = {value}')
 
                 self.handler.setopt(
                     getattr(self.handler, param.upper()),
@@ -602,7 +608,7 @@ class CurlDownloader(AbstractDownloader):
 
         if self.desc['post']:
 
-            _log('Setting HTTP POST')
+            logger.debug('Setting HTTP POST')
 
             if self.desc['multipart']:
 
@@ -627,7 +633,7 @@ class CurlDownloader(AbstractDownloader):
 
             else:
 
-                _log("JSON encoded post fields")
+                logger.debug('JSON encoded post fields')
 
                 data = (
                     json.dumps(self.desc['query'])
@@ -727,7 +733,7 @@ class RequestsDownloader(AbstractDownloader):
 
         self.setup()
 
-        _log('Performing download')
+        logger.info('Performing download')
         req = self.request.prepare()
 
         with self.session.send(req, **self.send_args) as resp:
@@ -757,12 +763,12 @@ class RequestsDownloader(AbstractDownloader):
                 self._downloaded += chunk_size
                 self.update_progress(chunk_size)
 
-        _log('Finished retrieving data')
+        logger.debug('Finished retrieving data')
         self.close_progress()
         self._destination.seek(0)
         self.close_dest()
         self.post_download()
-        _log('Download complete')
+        logger.info('Download complete')
 
 
     def init_handler(self):
@@ -770,7 +776,7 @@ class RequestsDownloader(AbstractDownloader):
         Initializes the `requests`-based donwload handler and session.
         """
 
-        _log('Creating Requests Session and Request')
+        logger.debug('Creating Requests Session and Request')
         self.session = requests.Session()
         self.request = requests.Request()
         self.send_args = {}
@@ -782,8 +788,8 @@ class RequestsDownloader(AbstractDownloader):
         download methods (get/post) based on the provided `Descriptor` instance.
         """
 
-        _log('Setting parameters for Requests')
-        _log(f'Setting URL: `{self.desc["url"]}`')
+        logger.debug('Setting parameters for Requests')
+        logger.debug(f'Setting URL: `{self.desc["url"]}`')
         self.request.url = self.desc['url']
         self.send_args['allow_redirects'] = self.desc['followlocation']
         self.send_args['timeout'] = (
@@ -793,7 +799,8 @@ class RequestsDownloader(AbstractDownloader):
 
         if self.desc['post']:
 
-            _log('Setting HTTP POST')
+
+            logger.debug('Setting HTTP POST')
             self.request.method = 'POST'
 
             if self.desc['multipart']:
@@ -807,7 +814,8 @@ class RequestsDownloader(AbstractDownloader):
 
             else:
 
-                _log('JSON encoded POST fields')
+
+                logger.debug('JSON encoded POST fields')
                 data = (
                     json.dumps(self.desc['query'])
                     if self.desc['json']
@@ -820,7 +828,8 @@ class RequestsDownloader(AbstractDownloader):
 
             self.request.method = 'GET'
 
-        _log(f'send_args: [{cmutils.serialize(self.send_args)}]')
+
+        logger.debug(f'send_args: [{cmutils.serialize(self.send_args)}]')
 
         # TODO: Figure out how to add these options in `requests` (if possible)
         #self.session.verify = self.desc['ssl_verifypeer']
