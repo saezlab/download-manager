@@ -22,11 +22,15 @@ __all__ = ['get_metadata']
 import os
 import pathlib
 import importlib.metadata
+import logging
 
 import toml
 
 _VERSION = '0.0.1'
 
+#--- Module logger 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 def get_metadata():
     """

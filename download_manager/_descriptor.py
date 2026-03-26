@@ -8,12 +8,16 @@ from typing import Any
 from collections import abc
 import os
 import urllib
+import logging
 
 import certifi
 from pypath_common import _misc as misc
 
 from . import _data
 
+#--- Module logger 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 class Descriptor(abc.Mapping):
     """

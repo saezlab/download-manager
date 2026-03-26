@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 
 from pypath_common import _misc
 
 __all__ = ['file_digest', 'parse_header']
 
+#--- Module logger 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 def file_digest(fileobj, digest, /, *, _bufsize=2**18):
     """
