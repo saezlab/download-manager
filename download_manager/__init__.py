@@ -25,12 +25,11 @@ __all__ = [
 import logging
 
 from . import _data
-from ._session import log, _log, session
+from ._session import session
 from ._metadata import __author__, __version__
 from ._descriptor import Descriptor
 from ._downloader import *
 from ._manager import *
-from cache_manager import _log
 
 # ---- Module level logger
 logger = logging.getLogger(__name__)

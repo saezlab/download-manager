@@ -13,6 +13,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
+
 __all__ = [
     'SYNONYMS',
     'ensure_int',

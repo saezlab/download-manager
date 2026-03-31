@@ -7,7 +7,7 @@ __all__ = [
     'RequestsDownloader',
 ]
 
-from typing import Any
+from typing import Any, IO
 import io
 import os
 import abc
@@ -17,6 +17,7 @@ import urllib.parse as urlparse
 import json
 import mimetypes
 import hashlib
+import time
 import logging
 from ._misc import file_digest
 
@@ -26,6 +27,7 @@ except ImportError:
     pycurl = None
 
 import requests
+import tqdm
 
 from cache_manager import _open
 from cache_manager import utils as cmutils
@@ -33,7 +35,6 @@ from cache_manager import utils as cmutils
 from . import _data
 from . import _curlopt
 from . import _descriptor
-from . import _log
 from . import _misc
 
 logger = logging.getLogger(__name__)
@@ -78,6 +79,7 @@ class AbstractDownloader(abc.ABC):
             self,
             desc: _descriptor.Descriptor,
             destination: str | None = None,
+            progress: bool = True,
     ):
         super().__init__()
         logger.debug(
@@ -89,12 +91,19 @@ class AbstractDownloader(abc.ABC):
         self._downloaded = 0
         self._expected_size = 0
         self.http_code = 0
+        self._progress_bar = None
+        self._show_progress = progress
+        self._progress_pending = 0
+        self._progress_min_chunk = 64 * 1024
+        self._progress_min_interval = 0.1
+        self._last_progress_update = 0.0
         self.set_destination(destination)
 
 
     def __del__(self):
 
         logger.debug('Finalizing %s', self.__class__.__name__)
+        self.close_progress()
         self.close_dest()
 
     @property
@@ -192,7 +201,6 @@ class AbstractDownloader(abc.ABC):
             and not isinstance(self._destination, io.BytesIO)
         ):
 
-            _log('Closing destination.')
             logger.debug('Closing destination object type=%s', type(self._destination).__name__)
             self._destination.close()
 
@@ -262,16 +270,17 @@ class AbstractDownloader(abc.ABC):
 
             if self.to_buffer:
 
-                _log('Returning buffer')
+                logger.debug('Returning buffer')
 
                 return self._destination
 
             else:
 
-                _log(
+                logger.debug(
                     f'Opening path {self.path} with '
                     f'{cmutils.serialize(kwargs)}'
                 )
+
                 self.opener = _open.Opener(self.path, **kwargs)
 
                 return self.opener.result
@@ -286,14 +295,14 @@ class AbstractDownloader(abc.ABC):
 
         if dest := self.destination:
 
-            _log(f'Opening destination for writing {dest}')
+            logger.debug(f'Opening destination for writing {dest}')
 
             self._destination = open(dest, 'wb')
             logger.info('Opened file destination: %s', dest)
 
         else:
 
-            _log(f'Creating buffer as download target')
+            logger.debug('Creating buffer as download target')
 
             self._destination = io.BytesIO()
             logger.info('Created in-memory buffer destination')
@@ -335,7 +344,6 @@ class AbstractDownloader(abc.ABC):
         initializing the download handler, configuration options, headers, etc.
         """
 
-        _log('Setting up downloader')
         logger.info('Setting up downloader: %s', self.__class__.__name__)
         self.init_handler()
         self.set_options()
@@ -343,8 +351,7 @@ class AbstractDownloader(abc.ABC):
         self.set_req_headers()
         self.set_resp_headers()
         self.set_progress()
-        _log('Finished setting up the downloader')
-        logger.debug('Downloader setup complete')
+        logger.debug('Finished setting up the downloader')
 
 
     @abc.abstractmethod
@@ -367,15 +374,91 @@ class AbstractDownloader(abc.ABC):
 
     def set_req_headers(self) -> None:
 
-        _log(f'Setting request headers: {",".join(self.desc["headers"])}')
-        logger.debug('Request header count=%d', len(self.desc['headers']))
+        logger.debug(f'Setting request headers: {",".join(self.desc["headers"])}')
 
 
     def set_progress(self) -> None:
 
         self._downloaded = 0
         self._expected_size = 0
-        logger.debug('Progress counters reset')
+        self._progress_pending = 0
+        self._last_progress_update = time.monotonic()
+
+        if self._progress_bar is not None:
+            self.close_progress()
+
+    def init_progress(self, total: int | None = None, desc: str = 'Downloading') -> None:
+
+        if not self._show_progress:
+            return
+
+        if self._progress_bar is None:
+            self._progress_bar = tqdm.tqdm(
+                total=total,
+                unit='B',
+                unit_scale=True,
+                unit_divisor=1024,
+                desc=desc,
+                leave=True,
+                dynamic_ncols=True,
+            )
+            return
+
+        if desc and self._progress_bar.desc != desc:
+            self._progress_bar.set_description(desc, refresh=False)
+
+        if total is not None:
+            self._progress_bar.total = total
+
+    def update_progress(self, n: int, force: bool = False) -> None:
+
+        if not self._show_progress:
+            return
+
+        if n > 0:
+            if self._progress_bar is None:
+                total = self._expected_size or None
+                self.init_progress(total=total)
+
+            if self._progress_bar is None:
+                return
+
+            self._progress_pending += n
+        elif self._progress_bar is None:
+            return
+
+        now = time.monotonic()
+        should_flush = force or (
+            self._progress_pending >= self._progress_min_chunk
+            or (now - self._last_progress_update) >= self._progress_min_interval
+        )
+
+        if not should_flush:
+            return
+
+        if self._progress_pending > 0:
+            self._progress_bar.update(self._progress_pending)
+            self._progress_pending = 0
+
+        if force:
+            self._progress_bar.refresh()
+
+        self._last_progress_update = now
+
+    def set_progress_total(self, total: int) -> None:
+
+        if total <= 0 or not self._show_progress:
+            return
+
+        self.init_progress(total=total)
+
+    def close_progress(self) -> None:
+
+        self.update_progress(0, force=True)
+
+        if self._progress_bar is not None:
+            self._progress_bar.close()
+            self._progress_bar = None
 
 
     @abc.abstractmethod
@@ -387,17 +470,16 @@ class AbstractDownloader(abc.ABC):
 
     def post_download(self) -> None:
 
-        _log('Post-download workflow started')
+        logger.debug('Post-download workflow started')
         self.parse_resp_headers()
         self.get_http_code()
-        _log(f'HTTP status code {self.http_code}')
         if self.http_code >= 400:
             logger.error('HTTP request failed with status=%s', self.http_code)
         elif self.http_code >= 300:
             logger.warning('HTTP request finished with redirect status=%s', self.http_code)
         else:
             logger.info('HTTP request finished successfully with status=%s', self.http_code)
-        _log('Finished post-download workflow')
+        logger.debug('Finished post-download workflow')
 
 
     def parse_resp_headers(self) -> None:
@@ -406,8 +488,7 @@ class AbstractDownloader(abc.ABC):
             key: self.parse_subheader(self.resp_headers.get(key, ''))
             for key in ['Content-Disposition', 'Content-Type']
         })
-        _log(f'Parsing response headers {cmutils.serialize(self.resp_headers)}')
-        logger.debug('Parsed response headers keys=%s', sorted(self.resp_headers.keys()))
+        logger.debug(f'Parsing response headers {cmutils.serialize(self.resp_headers)}')
 
 
     @staticmethod
@@ -453,7 +534,6 @@ class AbstractDownloader(abc.ABC):
 
     def _log_multipart(self) -> None:
 
-        _log(f'Multipart form data {",".join(sorted(self.desc["multipart"].keys()))}')
         logger.info(
             'Multipart payload keys=%s',
             sorted(self.desc['multipart'].keys()),
@@ -487,9 +567,10 @@ class CurlDownloader(AbstractDownloader):
         self,
         desc: _descriptor.Descriptor,
         destination: str | None = None,
+        progress: bool = True,
     ):
 
-        super().__init__(desc, destination)
+        super().__init__(desc, destination, progress)
 
 
     def _progress(
@@ -500,15 +581,22 @@ class CurlDownloader(AbstractDownloader):
         uploaded: int,
     ) -> None:
 
+        if self._show_progress and self._progress_bar is None:
+            initial_total = download_total if download_total > 0 else None
+            self.init_progress(total=initial_total)
+
+        if download_total > 0 and self._expected_size != download_total:
+            self._expected_size = download_total
+            self.set_progress_total(download_total)
+
+        if downloaded > self._downloaded:
+            delta = downloaded - self._downloaded
+            force_flush = download_total > 0 and downloaded >= download_total
+            self.update_progress(delta, force=force_flush)
+        elif download_total > 0 and downloaded >= download_total:
+            self.update_progress(0, force=True)
+
         self._downloaded = downloaded
-        self._expected_size = download_total
-        logger.debug(
-            'Curl progress downloaded=%s total=%s uploaded=%s upload_total=%s',
-            downloaded,
-            download_total,
-            uploaded,
-            upload_total,
-        )
 
 
     def init_handler(self):
@@ -516,7 +604,7 @@ class CurlDownloader(AbstractDownloader):
         Initializes the `curl`-based donwload handler.
         """
 
-        _log('Creating pycurl object')
+        logger.debug('Creating pycurl object')
         self.handler = pycurl.Curl()
         logger.info('Initialized pycurl handler')
 
@@ -528,7 +616,6 @@ class CurlDownloader(AbstractDownloader):
         """
 
         self.setup()
-        _log('Performing download')
         logger.info('Starting curl download to destination=%r', self.destination)
         try:
             self.handler.perform()
@@ -539,9 +626,9 @@ class CurlDownloader(AbstractDownloader):
             raise
         finally:
             self.handler.close()
+            self.close_progress()
             self._destination.seek(0)
             self.close_dest()
-        _log('Download complete')
 
     def open_dest(self):
         """
@@ -568,13 +655,12 @@ class CurlDownloader(AbstractDownloader):
         download methods (get/post) based on the provided `Descriptor` instance.
         """
 
-        _log('Set parameters for Curl')
         logger.debug('Configuring curl options from PARAMS list')
 
         for param in PARAMS:
 
             if (value := self.desc[param]) is not None:
-                _log(f'Curl parameter: {param} = {value}')
+                logger.debug(f'Curl parameter: {param} = {value}')
 
                 self.handler.setopt(
                     getattr(self.handler, param.upper()),
@@ -584,7 +670,6 @@ class CurlDownloader(AbstractDownloader):
 
         if self.desc['post']:
 
-            _log('Setting HTTP POST')
             logger.info('Configuring curl POST request')
 
             if self.desc['multipart']:
@@ -611,7 +696,7 @@ class CurlDownloader(AbstractDownloader):
 
             else:
 
-                _log("JSON encoded post fields")
+                logger.debug('JSON encoded post fields')
 
                 data = (
                     json.dumps(self.desc['query'])
@@ -702,9 +787,10 @@ class RequestsDownloader(AbstractDownloader):
         self,
         desc: _descriptor.Descriptor,
         destination: str | None = None,
+        progress: bool = True,
     ):
 
-        super().__init__(desc, destination)
+        super().__init__(desc, destination, progress)
 
 
     def download(self):
@@ -715,7 +801,6 @@ class RequestsDownloader(AbstractDownloader):
 
         self.setup()
 
-        _log('Performing download')
         logger.info('Starting requests download to destination=%r', self.destination)
         req = self.request.prepare()
 
@@ -726,20 +811,38 @@ class RequestsDownloader(AbstractDownloader):
                 self._expected_size = int(resp.headers.get('Content-Length', 0))
                 logger.debug('Expected size from header=%s', self._expected_size)
 
+                progress_desc = 'Downloading'
+                if self.desc['url']:
+                    progress_desc = os.path.basename(
+                        urlparse.urlparse(self.desc['url']).path
+                    ) or 'Downloading'
+
+                if self._show_progress:
+                    self.init_progress(
+                        total=self._expected_size or None,
+                        desc=progress_desc,
+                    )
+
                 for chunk in resp.iter_content(1024):
 
+                    if not chunk:
+                        continue
+
                     self._destination.write(chunk)
-                    self._downloaded =+ len(chunk)
+                    chunk_size = len(chunk)
+                    self._downloaded += chunk_size
+                    self.update_progress(chunk_size)
+
         except Exception:
             logger.exception('Requests download failed')
             raise
 
-        _log('Finished retrieving data')
+        logger.debug('Finished retrieving data')
+        self.close_progress()
         self._destination.seek(0)
         self.close_dest()
         self.post_download()
         logger.info('Requests download finished with http_code=%s', self.http_code)
-        _log('Download complete')
 
 
     def init_handler(self):
@@ -747,7 +850,7 @@ class RequestsDownloader(AbstractDownloader):
         Initializes the `requests`-based donwload handler and session.
         """
 
-        _log('Creating Requests Session and Request')
+        logger.debug('Creating Requests Session and Request')
         self.session = requests.Session()
         self.request = requests.Request()
         self.send_args = {}
@@ -760,9 +863,8 @@ class RequestsDownloader(AbstractDownloader):
         download methods (get/post) based on the provided `Descriptor` instance.
         """
 
-        _log('Setting parameters for Requests')
-        logger.debug('Configuring requests options')
-        _log(f'Setting URL: `{self.desc["url"]}`')
+        logger.debug('Setting parameters for Requests')
+        logger.debug(f'Setting URL: `{self.desc["url"]}`')
         self.request.url = self.desc['url']
         self.send_args['allow_redirects'] = self.desc['followlocation']
         self.send_args['timeout'] = (
@@ -773,7 +875,6 @@ class RequestsDownloader(AbstractDownloader):
 
         if self.desc['post']:
 
-            _log('Setting HTTP POST')
             logger.info('Configuring requests POST request')
             self.request.method = 'POST'
 
@@ -789,7 +890,8 @@ class RequestsDownloader(AbstractDownloader):
 
             else:
 
-                _log('JSON encoded POST fields')
+
+                logger.debug('JSON encoded POST fields')
                 data = (
                     json.dumps(self.desc['query'])
                     if self.desc['json']
@@ -804,8 +906,7 @@ class RequestsDownloader(AbstractDownloader):
             self.request.method = 'GET'
             logger.debug('Configured requests GET request')
 
-        _log(f'send_args: [{cmutils.serialize(self.send_args)}]')
-        logger.debug('Requests send args=%r', self.send_args)
+        logger.debug(f'send_args: [{cmutils.serialize(self.send_args)}]')
 
         # TODO: Figure out how to add these options in `requests` (if possible)
         #self.session.verify = self.desc['ssl_verifypeer']
