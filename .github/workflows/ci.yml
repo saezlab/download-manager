@@ -70,7 +70,7 @@ jobs:
       run: poetry install --no-interaction --no-root
     - name: Rebuild pycurl from source on macOS
       if: ${{ matrix.os == 'macos-latest' }}
-      run: poetry run pip install --no-cache-dir --no-binary :all: --force-reinstall pycurl
+      run: "poetry run pip install --no-cache-dir --no-binary :all: --force-reinstall pycurl"
     - name: Install library
       run: poetry install --no-interaction
     - name: Lint with flake8
