@@ -4,8 +4,10 @@ import logging
 import re
 from typing import Any
 
-import pycurl
-
+try:
+    import pycurl
+except ImportError:
+    pycurl = None
 
 # ---- Module level logger
 logger = logging.getLogger(__name__)
@@ -69,7 +71,7 @@ def http_version(ver: str): # XXX: not used?
         The correctly formatted http version option for PyCurl as a string.
     """
 
-    
+
     logger.debug(f"Function `http_version` called with ver: {ver!r}")
     ver = str(ver)
 

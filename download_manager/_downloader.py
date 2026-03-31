@@ -20,7 +20,11 @@ import hashlib
 import logging
 from ._misc import file_digest
 
-import pycurl
+try:
+    import pycurl
+except ImportError:
+    pycurl = None
+
 import requests
 
 from cache_manager import _open
