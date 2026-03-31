@@ -50,6 +50,7 @@ jobs:
           echo "PYCURL_SSL_LIBRARY=openssl"
           echo "PYCURL_CURL_CONFIG=${CURL_PREFIX}/bin/curl-config"
           echo "DYLD_LIBRARY_PATH=${CURL_PREFIX}/lib:${SSL_PREFIX}/lib"
+          echo "PIP_NO_BINARY=pycurl"
         } >> "$GITHUB_ENV"
     - name: Install Poetry
       uses: snok/install-poetry@v1
