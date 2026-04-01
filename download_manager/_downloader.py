@@ -380,7 +380,7 @@ class AbstractDownloader(abc.ABC):
 
     def set_req_headers(self) -> None:
 
-        logger.debug(f'Setting request headers: {','.join(self.desc['headers'])}')
+        logger.debug(f"Setting request headers: {','.join(self.desc['headers'])}")
 
 
     def set_progress(self) -> None:
@@ -519,7 +519,7 @@ class AbstractDownloader(abc.ABC):
     @property
     def size(self) -> int | None:
 
-        if not self.ok and (epx := getattr(self, '_expected_size', 0)):
+        if self.success and (epx := getattr(self, '_expected_size', 0)):
 
             logger.debug('Using expected size fallback=%s', epx)
             return epx
@@ -869,7 +869,7 @@ class RequestsDownloader(AbstractDownloader):
         """
 
         logger.debug('Setting parameters for Requests')
-        logger.debug(f'Setting URL: `{self.desc['url']}`')
+        logger.debug(f"Setting URL: `{self.desc['url']}`")
         self.request.url = self.desc['url']
         self.send_args['allow_redirects'] = self.desc['followlocation']
         self.send_args['timeout'] = (

@@ -218,3 +218,17 @@ def test_size(http_url, d_config):
     d = man._download(url, dest = False)
 
     assert d[2].size > 0
+
+
+def test_empty_response_is_not_ok(http_url, downloader):
+
+    url = f'{http_url}/bytes/0'
+    dl = downloader(dm.Descriptor(url), destination = False)
+    dl.setup()
+    dl.download()
+
+    assert dl.http_code == 200
+    assert dl.success
+    assert dl.size == 0
+    assert dl.is_empty
+    assert not dl.ok
