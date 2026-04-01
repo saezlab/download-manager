@@ -5,11 +5,11 @@ __all__ = [
     'DownloadManager',
 ]
 
+from pathlib import Path
 import io
 import os
-import datetime
 import logging
-from pathlib import Path
+import datetime
 
 from pypath_common import data as _data
 from cache_manager._status import Status
@@ -20,11 +20,8 @@ try:
     from cache_manager import _freshness as cm_freshness
 except ImportError:
     cm_freshness = None
-from . import (
-    _downloader,
-)
+from . import _constants, _downloader
 from ._descriptor import Descriptor
-from . import _constants
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -144,7 +141,7 @@ class DownloadManager:
             check_method=check_method,
             force_download=force_download,
             keep_old=keep_old,
-            **kwargs
+            **kwargs,
         )
 
         return dest
@@ -295,7 +292,7 @@ class DownloadManager:
 
                     logger.warning(
                         'Freshness check requested but cache_manager '
-                        'freshness module is unavailable; using cached file'
+                        'freshness module is unavailable; using cached file',
                     )
                     break
 
@@ -318,7 +315,7 @@ class DownloadManager:
 
                     logger.debug(
                         f'Freshness check result: {is_current}, '
-                        f'reason: {reason}'
+                        f'reason: {reason}',
                     )
 
                     if is_current:
@@ -333,7 +330,7 @@ class DownloadManager:
                     if keep_old:
 
                         timestamp = datetime.datetime.now().strftime(
-                            '%Y%m%d_%H%M%S'
+                            '%Y%m%d_%H%M%S',
                         )
                         existing_path = Path(path)
                         old_path = existing_path.parent / (
@@ -352,7 +349,7 @@ class DownloadManager:
 
                     logger.warning(
                         'Could not get remote headers for freshness check; '
-                        'redownloading'
+                        'redownloading',
                     )
 
                     if item is not None:
@@ -383,7 +380,9 @@ class DownloadManager:
                         path,
                         to_buffer,
                     )
+
                     break
+
                 logger.warning(
                     'Download attempt %d completed but not successful http_code=%s',
                     i + 1,
@@ -393,11 +392,14 @@ class DownloadManager:
             else:
 
                 logger.info(f'Item retrieved from cache: {path}')
+
                 break
 
 
         logger.info('Finished the download')
+
         if downloader and not downloader.ok:
+
             logger.error(
                 'All download attempts exhausted or failed http_code=%s',
                 downloader.http_code,
@@ -407,7 +409,7 @@ class DownloadManager:
             desc,
             item,
             downloader,
-            downloader._destination if to_buffer else path
+            downloader._destination if to_buffer else path,
         )
 
 
@@ -538,7 +540,7 @@ class DownloadManager:
 
             logger.debug(
                 f'Saving download metadata to cache. '
-                f'Size = {downloader.size}, HTTP code = {downloader.http_code}'
+                f'Size = {downloader.size}, HTTP code = {downloader.http_code}',
             )
 
             item.update(**args)

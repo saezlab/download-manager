@@ -7,18 +7,19 @@ __all__ = [
     'RequestsDownloader',
 ]
 
-from typing import Any, IO
+from typing import IO, Any
 import io
 import os
-import abc
 import re
-import urllib
-import urllib.parse as urlparse
+import abc
 import json
-import mimetypes
-import hashlib
 import time
+import urllib
+import hashlib
 import logging
+import mimetypes
+import urllib.parse as urlparse
+
 from ._misc import file_digest
 
 try:
@@ -26,16 +27,12 @@ try:
 except ImportError:
     pycurl = None
 
-import requests
 import tqdm
+import requests
 
 from cache_manager import _open
 from cache_manager import utils as cmutils
-
-from . import _data
-from . import _curlopt
-from . import _descriptor
-from . import _misc
+from . import _data, _misc, _curlopt, _descriptor
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -214,25 +211,34 @@ class AbstractDownloader(abc.ABC):
             `True`/`False` depending on the success of the download.
         """
 
-        # TODO: Do we set up the `success` attribute somewhere?
-        ok = self.success and (self.path_exists or self.to_buffer)
+        ok = (
+            self.success and
+            (self.path_exists or self.to_buffer) and
+            not self.is_empty
+        )
+
         logger.debug(
-            'Evaluated ok=%s success=%s path_exists=%s to_buffer=%s',
+            'Evaluated ok=%s, success=%s, path_exists=%s, to_buffer=%s, '
+            'is_empty=%s',
             ok,
             self.success,
             self.path_exists,
             self.to_buffer,
+            self.is_empty,
         )
+
         return ok
 
 
     @property
     def success(self) -> bool:
 
-        success = self.http_code == 200
-        if not success:
-            logger.debug('HTTP status is not success: %s', self.http_code)
-        return success
+        return self.http_code == 200
+
+    @property
+    def is_empty(self) -> bool:
+
+        return not bool(self.size)
 
 
     @property
@@ -278,7 +284,7 @@ class AbstractDownloader(abc.ABC):
 
                 logger.debug(
                     f'Opening path {self.path} with '
-                    f'{cmutils.serialize(kwargs)}'
+                    f'{cmutils.serialize(kwargs)}',
                 )
 
                 self.opener = _open.Opener(self.path, **kwargs)
@@ -374,7 +380,7 @@ class AbstractDownloader(abc.ABC):
 
     def set_req_headers(self) -> None:
 
-        logger.debug(f'Setting request headers: {",".join(self.desc["headers"])}')
+        logger.debug(f'Setting request headers: {','.join(self.desc['headers'])}')
 
 
     def set_progress(self) -> None:
@@ -500,7 +506,6 @@ class AbstractDownloader(abc.ABC):
                 if isinstance(header, dict) else
             _misc.parse_header(header) or {}
         )
-
 
     @property
     def path(self):
@@ -676,7 +681,7 @@ class CurlDownloader(AbstractDownloader):
 
                 self._log_multipart()
                 self.desc['headers'].append(
-                    'Content-Type: multipart/form-data'
+                    'Content-Type: multipart/form-data',
                 )
 
                 self.handler.setopt(
@@ -686,11 +691,11 @@ class CurlDownloader(AbstractDownloader):
                             name,
                             value
                             if typ == 'data'
-                            else (pycurl.FORM_FILE, value)
+                            else (pycurl.FORM_FILE, value),
                         )
                         for typ, params in self.desc['multipart'].items()
                         for name, value in params.items()
-                    ]
+                    ],
                 )
                 logger.debug('Configured curl multipart post fields')
 
@@ -814,7 +819,7 @@ class RequestsDownloader(AbstractDownloader):
                 progress_desc = 'Downloading'
                 if self.desc['url']:
                     progress_desc = os.path.basename(
-                        urlparse.urlparse(self.desc['url']).path
+                        urlparse.urlparse(self.desc['url']).path,
                     ) or 'Downloading'
 
                 if self._show_progress:
@@ -864,7 +869,7 @@ class RequestsDownloader(AbstractDownloader):
         """
 
         logger.debug('Setting parameters for Requests')
-        logger.debug(f'Setting URL: `{self.desc["url"]}`')
+        logger.debug(f'Setting URL: `{self.desc['url']}`')
         self.request.url = self.desc['url']
         self.send_args['allow_redirects'] = self.desc['followlocation']
         self.send_args['timeout'] = (
