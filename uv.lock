@@ -60,17 +60,30 @@ wheels = [
 
 [[package]]
 name = "cachedir"
-version = "0.1.1"
-source = { registry = "https://pypi.org/simple" }
+version = "0.1.2"
+source = { editable = "../cache-manager" }
 dependencies = [
     { name = "pkg-infra" },
     { name = "platformdirs" },
     { name = "python-dateutil" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/cd/b2/a04a858b504fd88ed3c8680a0c0485633641c963b03bcc5e2bd8538ca0cc/cachedir-0.1.1.tar.gz", hash = "sha256:c13b2ad300955e202b645c5376c827f89ac9b5b4de0c63dcb0ad74c1ef284af9", size = 145156, upload-time = "2026-04-05T15:40:57.068Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c5/46/276b7905f874f1804da889ea3cc51166cd50cf9c6a455669a8e77e24c111/cachedir-0.1.1-py3-none-any.whl", hash = "sha256:29dbd639401c4b2c1a8627d5b60b9cfc3d6d2ef88a84dfa6dd7332a77dd0718d", size = 42417, upload-time = "2026-04-05T15:40:55.065Z" },
+
+[package.metadata]
+requires-dist = [
+    { name = "bump2version", marker = "extra == 'dev'" },
+    { name = "coverage", marker = "extra == 'tests'", specifier = ">=6.0" },
+    { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6,<2" },
+    { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.6.14" },
+    { name = "mkdocstrings", extras = ["python"], marker = "extra == 'docs'", specifier = ">=0.29.1,<0.30" },
+    { name = "pkg-infra", specifier = ">=0.1.0" },
+    { name = "platformdirs", specifier = ">=4.2.2" },
+    { name = "pre-commit", marker = "extra == 'dev'" },
+    { name = "pytest", marker = "extra == 'tests'", specifier = ">=6.0" },
+    { name = "pytest-cov", marker = "extra == 'tests'" },
+    { name = "python-dateutil", specifier = ">=2.9.0" },
+    { name = "ruff", marker = "extra == 'tests'" },
 ]
+provides-extras = ["dev", "docs", "tests"]
 
 [[package]]
 name = "certifi"
@@ -345,7 +358,7 @@ wheels = [
 
 [[package]]
 name = "dlmachine"
-version = "0.0.1"
+version = "0.0.2"
 source = { editable = "." }
 dependencies = [
     { name = "cachedir" },
@@ -379,7 +392,7 @@ tests = [
 [package.metadata]
 requires-dist = [
     { name = "bump2version", marker = "extra == 'dev'" },
-    { name = "cachedir", specifier = ">=0.1.1" },
+    { name = "cachedir", editable = "../cache-manager" },
     { name = "certifi", specifier = ">=2024.7.4" },
     { name = "coverage", marker = "extra == 'tests'", specifier = ">=6.0" },
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6,<2" },
@@ -1062,7 +1075,7 @@ wheels = [
 
 [[package]]
 name = "pkg-infra"
-version = "0.1.0"
+version = "0.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
@@ -1076,9 +1089,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "toml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/64/8f/452c671eff71323bc925b508cd58d8d49ffcf92f8a93709b8d144f1e710b/pkg_infra-0.1.0.tar.gz", hash = "sha256:508cef7ed21055ed2eca100725a783a7a63c194eb96b476e4a0487786cd95643", size = 661155, upload-time = "2026-04-05T15:34:07.157Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f1/b0/11b27d5a80ac11529135ded619648cdebd5bae612ef8102a88e39d2d6db7/pkg_infra-0.1.1.tar.gz", hash = "sha256:12cdf2a49cb9107f96a246135da69cb7919ae4aedbc3988674fc42e34fd8ea8d", size = 661408, upload-time = "2026-04-05T15:54:01.901Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0a/60/1bdc8e9665dee55c63b808dd02037051a9619bb04aa2c3edd16f30ce4951/pkg_infra-0.1.0-py3-none-any.whl", hash = "sha256:bfea6ba198fe89f1ac5015293c4c78e14916d06d9c848e589894ba9460e9ad68", size = 45376, upload-time = "2026-04-05T15:34:08.697Z" },
+    { url = "https://files.pythonhosted.org/packages/2c/4b/5b6dd0a3fe3ac8de4dc07f20a60071a8d1a117d76a08fc7cbe8511cd086d/pkg_infra-0.1.1-py3-none-any.whl", hash = "sha256:602d7527ce002371aa5a09f6c30ad0ebd78e4a9420c381916c35dc6e059f532a", size = 45538, upload-time = "2026-04-05T15:53:59.645Z" },
 ]
 
 [[package]]
