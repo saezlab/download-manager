@@ -61,29 +61,16 @@ wheels = [
 [[package]]
 name = "cachedir"
 version = "0.1.2"
-source = { editable = "../cache-manager" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pkg-infra" },
     { name = "platformdirs" },
     { name = "python-dateutil" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "bump2version", marker = "extra == 'dev'" },
-    { name = "coverage", marker = "extra == 'tests'", specifier = ">=6.0" },
-    { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6,<2" },
-    { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.6.14" },
-    { name = "mkdocstrings", extras = ["python"], marker = "extra == 'docs'", specifier = ">=0.29.1,<0.30" },
-    { name = "pkg-infra", specifier = ">=0.1.0" },
-    { name = "platformdirs", specifier = ">=4.2.2" },
-    { name = "pre-commit", marker = "extra == 'dev'" },
-    { name = "pytest", marker = "extra == 'tests'", specifier = ">=6.0" },
-    { name = "pytest-cov", marker = "extra == 'tests'" },
-    { name = "python-dateutil", specifier = ">=2.9.0" },
-    { name = "ruff", marker = "extra == 'tests'" },
+sdist = { url = "https://files.pythonhosted.org/packages/80/39/2d7892aa9c436b3a0ec1a3bd77ba93de0af0116669ceee906f490257c568/cachedir-0.1.2.tar.gz", hash = "sha256:f450088bfcf6b64f8b0f5c68e9bb7eb5d04db62f8686e3f55ab5da06a05825e0", size = 133814, upload-time = "2026-04-05T15:54:02.288Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/aa/38/5092f7e3bdcb7a1bfd9f11a9c045f474ce1cc29bd5a402ed007b5e23ff08/cachedir-0.1.2-py3-none-any.whl", hash = "sha256:0e52659de7f481f32204853948dcead785b2b58e48a06a454224b7dbe33f673d", size = 30899, upload-time = "2026-04-05T15:54:00.793Z" },
 ]
-provides-extras = ["dev", "docs", "tests"]
 
 [[package]]
 name = "certifi"
@@ -392,7 +379,7 @@ tests = [
 [package.metadata]
 requires-dist = [
     { name = "bump2version", marker = "extra == 'dev'" },
-    { name = "cachedir", editable = "../cache-manager" },
+    { name = "cachedir", specifier = ">=0.1.2" },
     { name = "certifi", specifier = ">=2024.7.4" },
     { name = "coverage", marker = "extra == 'tests'", specifier = ">=6.0" },
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6,<2" },
@@ -415,7 +402,7 @@ name = "exceptiongroup"
 version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/50/79/66800aadf48771f6b62f7eb014e352e5d06856655206165d775e675a02c9/exceptiongroup-1.3.1.tar.gz", hash = "sha256:8b412432c6055b0b7d14c310000ae93352ed6754f70fa8f7c34141f91c4e3219", size = 30371, upload-time = "2025-11-21T23:01:54.787Z" }
 wheels = [

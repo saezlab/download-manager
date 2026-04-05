@@ -1,0 +1,50 @@
+site_name: dlmachine
+site_url: https://saezlab.github.io/dlmachine
+repo_url: https://github.com/saezlab/dlmachine
+repo_name: saezlab/dlmachine
+
+theme:
+  name: material
+  favicon: assets/favicon.ico
+  icon:
+    logo: material/database
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+extra_css:
+  - assets/omnipath-theme.css
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: ["."]
+          options:
+            show_source: false
+            show_root_heading: true
+
+nav:
+  - Home: index.md
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - toc:
+      permalink: true
