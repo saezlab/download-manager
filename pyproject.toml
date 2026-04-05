@@ -1,17 +1,24 @@
-[build-system]
-requires = ["poetry_core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+# ===================================
+# =======        BUILD       ========
+# ===================================
 
-[tool.poetry]
-name = "download-manager"
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+# ===================================
+# =======       PROJECT      ========
+# ===================================
+
+[project]
+name = "dlmachine"
 version = "0.0.1"
 description = "Download manager for Python"
-license = "GNU General Public License Version 3"
+license = "GPL-3.0-or-later"
+readme = "README.md"
+requires-python = ">=3.10"
 authors = [
-    "OmniPath team <omnipathdb@gmail.com>"
-]
-packages = [
-    { include = "download_manager" }
+    {name = "OmniPath Team", email = "omnipathdb@gmail.com"},
 ]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
@@ -21,139 +28,155 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Natural Language :: English",
-    "Topic :: Scientific/Engineering :: Bio-Informatics"
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
-repository = "https://github.com/saezlab/download-manager"
-homepage = "https://github.com/saezlab/download-manager"
-documentation = "https://download-manager.readthedocs.io/"
-readme = "README.md"
-
-[tool.poetry.dependencies]
-python = "^3.10"
-toml = "*"
-cache-manager = { git = "https://github.com/saezlab/cache-manager.git", branch = "main" }
-pkg_infra = { git = "https://github.com/saezlab/pkg_infra.git", branch = "main" }
-pycurl = "^7.45.3"
-requests = "^2.32.3"
-certifi = "^2024.7.4"
-tqdm = "*"
-
-[tool.poetry.group.dev.dependencies]
-pytest = ">=6.0"
-tox = ">=3.20.1"
-pre-commit = ">=2.17.0"
-bump2version = "*"
-coverage = ">=6.0"
-pytest-cov = "*"
-codecov-cli = "^0.7.4"
-distlib = "*"
-sphinx = ">=5.0.0"
-sphinx-last-updated-by-git = ">=0.3"
-sphinx-autodoc-typehints = ">=1.18.0"
-sphinxcontrib-fulltoc = ">=1.2.0"
-sphinxcontrib-bibtex = "*"
-sphinx-copybutton = "*"
-myst-parser = "*"
-pydata-sphinx-theme = "*"
-sphinx-remove-toctrees = "*"
-flake8-pyproject = { git = "https://github.com/john-hen/Flake8-pyproject.git" }
-
-[tool.poetry.urls]
-"Bug Tracker" = "https://github.com/saezlab/download-manager/issues"
-
-[tool.black]
-line-length = 80
-target-version = ['py31*']
-include = '\.pyi?$'
-exclude = '''
-(
-  /(
-      \.eggs
-    | \.git
-    | \.hg
-    | \.mypy_cache
-    | \.tox
-    | \.venv
-    | _build
-    | buck-out
-    | build
-    | dist
-  )/
-)
-'''
-
-[tool.isort]
-from_first = true
-line_length = 80
-multi_line_output = 3
-include_trailing_comma = true
-use_parentheses = true
-known_num="numpy,pandas"
-sections = "FUTURE,STDLIB,THIRDPARTY,NUM,FIRSTPARTY,LOCALFOLDER"
-no_lines_before="LOCALFOLDER"
-balanced_wrapping = true
-force_grid_wrap = 0
-length_sort = "1"
-indent = "    "
-skip = []
-
-[tool.flake8]
-extend-select = ["CE101"]
-ignore = [
-  "D200", "D202", "D401", "D105",
-  "W503", "W504",
-  "E731", "E131", "E251", "E303"
-]
-per-file-ignores = [
-    "docs/src/conf.py:D100",
-    "tests/*:D100,D101,D102",
-    "*/__init__.py:F401"
-]
-max-line-length = 80
-count = true
-exclude = [
-    ".git",
-    "__pycache__",
-    "build",
-    "docs/_build",
-    "dist"
+dependencies = [
+    "cachedir>=0.1.1",
+    "pkg-infra>=0.1.0",
+    "requests>=2.32.3",
+    "certifi>=2024.7.4",
+    "tqdm",
+    "toml",
 ]
 
-[tool.yapf]
-based_on_style = "facebook"
-split_penalty_before_if_expr = 0
-split_penalty_import_names = 0
-split_penalty_comprehension = 0
-split_penalty_for_added_line_split = 0
-split_penalty_after_opening_bracket = 0
-split_before_first_argument = true
-split_before_named_assigns = true
-split_complex_comprehension = true
-
-[tool.rstcheck]
-report_level = "INFO"
-ignore_directives = [
-    "automodule",
-    "toctree",
+[project.optional-dependencies]
+curl = [
+    "pycurl>=7.45.3",
 ]
-ignore_roles = ["ref"]
-ignore_messages = '(Unknown target name:.*|No (directive|role) entry for "(auto)?(class|method|property|function|func|mod|attr)" in module "docutils\.parsers\.rst\.languages\.en"\.)'
+dev = [
+    "pre-commit",
+    "bump2version",
+]
+docs = [
+    "mkdocs>=1.6,<2",
+    "mkdocs-material>=9.6.14",
+    "mkdocstrings[python]>=0.29.1,<0.30",
+]
+tests = [
+    "pytest>=6.0",
+    "pytest-cov",
+    "coverage>=6.0",
+    "ruff",
+]
 
+[project.urls]
+Documentation = "https://github.com/saezlab/dlmachine"
+Homepage = "https://github.com/saezlab/dlmachine"
+Issues = "https://github.com/saezlab/dlmachine/issues"
+Repository = "https://github.com/saezlab/dlmachine"
+
+# ===================================
+# =======        TOOL        ========
+# ===================================
+
+[tool.hatch.build.targets.wheel]
+packages = ["download_manager"]
+
+# ---- Coverage
 [tool.coverage.run]
 source = ["download_manager"]
-omit = [
-	"**/test_*.py",
-]
+omit = ["**/test_*.py"]
 
+# ---- Pytest
 [tool.pytest.ini_options]
-testpaths = [
-  "tests",
-]
+testpaths = ["tests"]
 xfail_strict = true
 addopts = [
-    # "-Werror",  # if 3rd party libs raise DeprecationWarnings, just use filterwarnings below
-    "--import-mode=importlib",  # allow using test files with same name
+    "--import-mode=importlib",
 ]
-filterwarnings = [
-    # "ignore:.*U.*mode is deprecated:DeprecationWarning",
+filterwarnings = []
+
+# ---- Ruff
+[tool.ruff]
+exclude = [
+    "sandbox",
+    "tests",
+    "tests/**",
+    "*/tests/**",
+    "**/test_*.py",
 ]
+extend-include = ["*.ipynb"]
+line-length = 80
+target-version = "py310"
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint]
+exclude = [
+    "docs/_build",
+    "tests",
+    "tests/**",
+    "*/tests/**",
+    "**/test_*.py",
+]
+ignore = [
+    "COM812",
+    "ISC001",
+    "B008",
+    "B024",
+    "D100",
+    "D104",
+    "D105",
+    "D107",
+    "D200",
+    "D202",
+    "D203",
+    "D213",
+    "D400",
+    "D401",
+    "E251",
+    "E303",
+    "E501",
+    "E731",
+    "E741",
+    "UP017",
+]
+select = [
+    "B",
+    "BLE",
+    "C4",
+    "D",
+    "E",
+    "F",
+    "I",
+    "RUF100",
+    "TID",
+    "UP",
+    "W",
+    "Q",
+    "S307",
+    "ANN",
+]
+unfixable = ["UP"]
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "single"
+
+[tool.ruff.lint.isort]
+case-sensitive = false
+combine-as-imports = true
+force-sort-within-sections = true
+force-wrap-aliases = true
+known-first-party = ["download_manager"]
+known-third-party = ["numpy", "pandas"]
+length-sort = false
+no-lines-before = ["local-folder"]
+order-by-type = true
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "first-party",
+    "local-folder",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"*/__init__.py" = ["D104", "F401"]
+"docs/*" = ["I"]
+"docs/src/conf.py" = ["D100"]
+"tests/*" = ["D"]
+"tests/conftest.py" = ["D101", "D102", "D103", "E402"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"

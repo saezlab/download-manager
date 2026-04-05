@@ -1,6 +1,6 @@
 import functools as ft
 import logging
-from pypath_common import data as _data
+from pkg_infra import data as _data
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

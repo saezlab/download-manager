@@ -11,7 +11,7 @@ import urllib
 import logging
 
 import certifi
-from pypath_common import _misc as misc
+from pkg_infra.utils import _misc as misc
 
 from . import _data
 

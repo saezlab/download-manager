@@ -11,7 +11,7 @@ import os
 import logging
 import datetime
 
-from pypath_common import data as _data
+from pkg_infra import data as _data
 from cache_manager._status import Status
 import cache_manager as cm
 import cache_manager.utils as cmutils

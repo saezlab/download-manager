@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import logging
 
-from pypath_common import _misc
+from pkg_infra.utils import _misc
 
 __all__ = ['file_digest', 'parse_header']
 
