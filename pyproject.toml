@@ -12,7 +12,7 @@ requires = ["hatchling"]
 
 [project]
 name = "dlmachine"
-version = "0.0.1"
+version = "0.0.2"
 description = "Download manager for Python"
 license = "BSD-3-Clause"
 readme = "README.md"
