@@ -21,7 +21,7 @@ Describe the change in 1-3 concise points.
 ## Validation
 
 - [ ] `poetry run pytest`
-- [ ] `poetry run flake8 download_manager`
+- [ ] `poetry run flake8 dlmachine`
 - [ ] Added/updated tests (if needed)
 - [ ] Added/updated documentation (if needed)
 

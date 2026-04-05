@@ -1,6 +1,6 @@
 blank_issues_enabled: true
 contact_links:
-  - name: 👥 download-manager GitHub Discussions
-    url: https://github.com/saezlab/download-manager/discussions
+  - name: 👥 dlmachine GitHub Discussions
+    url: https://github.com/saezlab/dlmachine/discussions
     about: Please ask questions and participate in our long-term discussions here.
 

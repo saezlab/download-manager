@@ -1,10 +1,10 @@
 [![Tests][badge-ci]][link-ci]
 [![Coverage][badge-cov]][link-cov]
 
-[badge-cov]: https://codecov.io/github/saezlab/download-manager/graph/badge.svg
-[link-cov]: https://codecov.io/github/saezlab/download-manager
-[badge-ci]: https://img.shields.io/github/actions/workflow/status/saezlab/download-manager/ci.yml?branch=main
-[link-ci]: https://github.com/saezlab/download-manager/actions/workflows/ci.yml
+[badge-cov]: https://codecov.io/github/saezlab/dlmachine/graph/badge.svg
+[link-cov]: https://codecov.io/github/saezlab/dlmachine
+[badge-ci]: https://img.shields.io/github/actions/workflow/status/saezlab/dlmachine/ci.yml?branch=main
+[link-ci]: https://github.com/saezlab/dlmachine/actions/workflows/ci.yml
 
 # A Download Manager Python Module
 
@@ -15,7 +15,7 @@ A flexible, cache-aware download manager for Python, supporting multiple backend
 ## Features
 
 - **Multiple Backends:** Choose between `requests` and `pycurl` for downloads.
-- **Cache Integration:** Seamless integration with [`cache-manager`](https://github.com/saezlab/cache-manager) for efficient file reuse and metadata tracking.
+- **Cache Integration:** Seamless integration with [`cachedir`](https://github.com/saezlab/cachedir) for efficient file reuse and metadata tracking.
 - **Flexible Destinations:** Download to disk, in-memory buffer, or cache.
 - **Automatic Metadata:** Tracks download status, timestamps, HTTP headers, file hashes, and more.
 - **Configurable:** Supports configuration via Python dict or config file.
@@ -26,20 +26,20 @@ A flexible, cache-aware download manager for Python, supporting multiple backend
 ## Installation
 
 ```bash
-pip install git+https://github.com/saezlab/download-manager.git
+pip install git+https://github.com/saezlab/dlmachine.git
 ```
 
 If your are developing:
 ```bash
-git clone https://github.com/saezlab/download-manager.git
-cd download-manager
+git clone https://github.com/saezlab/dlmachine.git
+cd dlmachine
 poetry install
 ```
 
 ## Usage
 
 ```python
-import download_manager as dm
+import dlmachine as dm
 
 # Basic download to buffer
 manager = dm.DownloadManager(backend='requests')
@@ -64,7 +64,7 @@ The package is built around four core components:
 - `DownloadManager`: orchestrates cache lookup, backend selection, retries, and metadata updates.
 - `Descriptor`: normalizes request parameters (URL, query, headers, JSON, multipart, TLS CA path).
 - `RequestsDownloader` and `CurlDownloader`: backend-specific implementations of the download workflow.
-- `cache_manager`: optional persistence layer for file reuse and download metadata.
+- `cachedir`: optional persistence layer for file reuse and download metadata.
 
 ### Component Diagram
 
@@ -72,7 +72,7 @@ The package is built around four core components:
 flowchart LR
     U[User code] --> M[DownloadManager]
     M --> D[Descriptor]
-    M --> C[(cache_manager Cache)]
+    M --> C[(cachedir Cache)]
     M --> B{backend}
     B --> R[RequestsDownloader]
     B --> P[CurlDownloader]
@@ -144,14 +144,14 @@ dm.DownloadManager(
 ```
 
 ## Development
-- **Linting**: `poetry run flake8 download_manager`
+- **Linting**: `poetry run flake8 dlmachine`
 - **Tests**: `poetry run pytest`
 - **Coverage**: `poetry run pytest --cov`
 - **Pre-commit**: Install with `pre-commit install`
 
 ## License
 
-GNU General Public License v3.0
+BSD 3-Clause License
 
 ---
 

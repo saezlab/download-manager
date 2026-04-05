@@ -1,4 +1,4 @@
-import download_manager as dm
+import dlmachine as dm
 
 __all__ = [
     'test_builtin_examples',

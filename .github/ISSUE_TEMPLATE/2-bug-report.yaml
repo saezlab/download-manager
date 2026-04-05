@@ -10,7 +10,7 @@ body:
   - type: markdown
     attributes:
       value: >
-        **Before submitting a bug, please make sure the issue hasn't been already addressed by [searching through](https://github.com/saezlab/download-manager/issues).**
+        **Before submitting a bug, please make sure the issue hasn't been already addressed by [searching through](https://github.com/saezlab/dlmachine/issues).**
         Please write your bug report in English to ensure it can be understood and addressed by the development team.
 
   #----------------   Installed From --------------
@@ -18,7 +18,7 @@ body:
     id: source
     attributes:
       label: Source
-      description: download-manager has been installed from
+      description: dlmachine has been installed from
       options:
         - conda
         - pip
@@ -43,12 +43,12 @@ body:
     validations:
       required: true
 
-  #--------------   download-manager version   --------------
+  #--------------   dlmachine version   --------------
   - type: input
-    id: download-manager-version
+    id: dlmachine-version
     attributes:
-      label: download-manager version
-      placeholder: e.g., download-manager v0.0.1
+      label: dlmachine version
+      placeholder: e.g., dlmachine v0.0.1
     validations:
       required: true
 
@@ -73,7 +73,7 @@ body:
 
         ```python
         # All necessary imports at the beginning
-        import download_manager as dm
+        import dlmachine as dm
 
         # A succinct reproducing example trimmed down to the essential parts:
         manager = dm.DownloadManager()
@@ -109,7 +109,7 @@ body:
     id: terms
     attributes:
       label: Code of Conduct
-      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/saezlab/download-manager/blob/main/CODE_OF_CONDUCT.md).
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/saezlab/dlmachine/blob/main/CODE_OF_CONDUCT.md).
       options:
         - label: I agree to follow this project's Code of Conduct
           required: true

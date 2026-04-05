@@ -1,6 +1,6 @@
 import pycurl
 
-import download_manager._curlopt as co
+import dlmachine._curlopt as co
 
 __all__ = [
     'test_process',

@@ -1,12 +1,12 @@
 [paths]
 source =
-    download_manager
-    */site-packages/download-manager
+    dlmachine
+    */site-packages/dlmachine
 
 [run]
 branch = true
 parallel = true
-source = download_manager
+source = dlmachine
 omit = */__init__.py
 
 [report]

@@ -12,12 +12,12 @@ import logging
 import datetime
 
 from pkg_infra import data as _data
-from cache_manager._status import Status
-import cache_manager as cm
-import cache_manager.utils as cmutils
+from cachedir._status import Status
+import cachedir as cm
+import cachedir.utils as cmutils
 
 try:
-    from cache_manager import _freshness as cm_freshness
+    from cachedir import _freshness as cm_freshness
 except ImportError:
     cm_freshness = None
 from . import _constants, _downloader
@@ -291,7 +291,7 @@ class DownloadManager:
                 if cm_freshness is None:
 
                     logger.warning(
-                        'Freshness check requested but cache_manager '
+                        'Freshness check requested but cachedir '
                         'freshness module is unavailable; using cached file',
                     )
                     break

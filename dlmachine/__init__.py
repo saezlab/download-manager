@@ -1,18 +1,3 @@
-#!/usr/bin/env python
-
-#
-# This file is part of the `download_manager` Python module
-#
-# Copyright 2024
-# Heidelberg University Hospital
-#
-# File author(s): OmniPath team (omnipathdb@gmail.com)
-#
-# Distributed under the GPLv3 license
-# See the file `LICENSE` or read a copy at
-# https://www.gnu.org/licenses/gpl-3.0.txt
-#
-
 """
 Download manager for Python
 """
@@ -35,7 +20,7 @@ from ._manager import *
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 logger.debug(
-    'download_manager imported version=%s author=%s',
+    'dlmachine imported version=%s author=%s',
     __version__,
     __author__,
 )

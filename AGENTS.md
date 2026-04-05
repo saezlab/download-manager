@@ -1,12 +1,12 @@
-# download-manager — Instructions for AI Assistants
+# dlmachine — Instructions for AI Assistants
 
-You are working in the **download-manager** package, a Python download manager
+You are working in the **dlmachine** package, a Python download manager
 providing a common API for `pycurl` and `requests` backends, integrated with
 `cache-manager` for local file caching.
 
 ## About this package
 
-download-manager handles HTTP downloads with configurable backends (pycurl or
+dlmachine handles HTTP downloads with configurable backends (pycurl or
 requests), automatic caching through cache-manager, progress bars, multipart
 uploads, and descriptor-based request configuration. It is used by other
 saezlab packages (notably pypath and omnipath-client) for all data
@@ -38,7 +38,7 @@ been removed in favour of `logger.debug()` / `logger.info()` / etc.
 
 - **pypath-common** (`pypath_common`) — session management, data loading,
   misc utilities
-- **cache-manager** (`cache_manager`) — local file caching, cache item
+- **cache-manager** (`cachedir`) — local file caching, cache item
   lifecycle, file opening
 
 ## Coding conventions
@@ -58,6 +58,6 @@ The architecture repository at `~/saezverse` contains package descriptions,
 coding conventions, architecture decisions, and development plans for all
 saezlab packages. Consult it for:
 
-- How download-manager fits into the broader package portfolio
+- How dlmachine fits into the broader package portfolio
 - Cross-package API contracts (especially with cache-manager and pypath)
 - Coding style guidelines and ADRs

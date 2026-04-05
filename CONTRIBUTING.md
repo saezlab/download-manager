@@ -1,6 +1,6 @@
-# Contributing to download-manager
+# Contributing to dlmachine
 
-Thanks for contributing to `download-manager`.
+Thanks for contributing to `dlmachine`.
 
 ## Ground Rules
 
@@ -28,7 +28,7 @@ Thanks for contributing to `download-manager`.
   ```
 - Run lint checks:
   ```bash
-  poetry run flake8 download_manager
+  poetry run flake8 dlmachine
   ```
 
 ## Branches and Commits

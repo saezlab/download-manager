@@ -1,10 +1,10 @@
 name: ✨ Feature Request
-description: Submit a proposal/request for a new download-manager feature
+description: Submit a proposal/request for a new dlmachine feature
 
 title: "[FEAT]: "
 labels:
   - "feature"
-projects: ["download-manager/1"]
+projects: ["dlmachine/1"]
 
 body:
   - type: markdown
@@ -19,9 +19,9 @@ body:
       label: Feature Type
       description: Please select what type of feature request you would like to propose.
       options:
-        - Add new functionality to download-manager
-        - Change existing functionality in download-manager
-        - Remove existing functionality in download-manager
+        - Add new functionality to dlmachine
+        - Change existing functionality in dlmachine
+        - Remove existing functionality in dlmachine
       multiple: false
     validations:
       required: true
@@ -36,7 +36,7 @@ body:
         If this is connected to an existing GitHub issue, please include a link.
       placeholder: |
         **Feature description**
-          As user I want to be able to do X with download-manager so that I can achieve Y.
+          As user I want to be able to do X with dlmachine so that I can achieve Y.
 
         **Motivation**
           This feature would be useful for Z because...
@@ -56,7 +56,7 @@ body:
     id: terms
     attributes:
       label: Code of Conduct
-      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/saezlab/download-manager/blob/main/CODE_OF_CONDUCT.md).
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/saezlab/dlmachine/blob/main/CODE_OF_CONDUCT.md).
       options:
         - label: I agree to follow this project's Code of Conduct
           required: true

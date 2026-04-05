@@ -17,16 +17,16 @@ import pathlib
 here = pathlib.Path(__file__).parent
 sys.path.insert(0, str(here.parent))
 
-import download_manager  # noqa: E402
+import dlmachine  # noqa: E402
 
 # -- Project information -----------------------------------------------------
 
-project = 'download_manager'
-version = download_manager.__version__
-author = ', '.join(download_manager.__author__)
+project = 'dlmachine'
+version = dlmachine.__version__
+author = ', '.join(dlmachine.__author__)
 years = '-'.join(sorted({'2022', f'{datetime.now():%Y}'}))
 copyright = f'{years}, Saez Lab'
-repository_url = 'https://github.com/saezlab/download-manager'
+repository_url = 'https://github.com/saezlab/dlmachine'
 
 # -- General configuration ---------------------------------------------------
 

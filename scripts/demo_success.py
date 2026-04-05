@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run a success-path demo for download_manager with verbose logging."""
+"""Run a success-path demo for dlmachine with verbose logging."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-import download_manager as dm
+import dlmachine as dm
 
 def main() -> int:
 
@@ -53,7 +53,7 @@ def main() -> int:
     logger.info("Cache-aware download path=%s", cached_path)
 
     logger.info("=== SUCCESS DEMO END ===")
-    logger.info("Tip: existing _log messages (from pypath/cache_manager) run in parallel.")
+    logger.info("Tip: existing _log messages (from pypath/cachedir) run in parallel.")
     return 0
 
 

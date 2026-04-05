@@ -6,7 +6,7 @@ import json
 
 import requests
 
-import download_manager as dm
+import dlmachine as dm
 
 
 def test_most_simple(http_url, downloader):

@@ -5,7 +5,7 @@ from pkg_infra import data as _data
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
-_raw_module_data = ft.partial(_data.load, module = 'download_manager')
+_raw_module_data = ft.partial(_data.load, module = 'dlmachine')
 
 
 def _module_data(*args, **kwargs):

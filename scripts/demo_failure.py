@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run failure-path demos for download_manager with verbose logging."""
+"""Run failure-path demos for dlmachine with verbose logging."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-import download_manager as dm
+import dlmachine as dm
 
 
 def configure_logging() -> None:
@@ -22,7 +22,7 @@ def configure_logging() -> None:
         level=logging.DEBUG,
         format="%(asctime)s [%(levelname)5s] [%(name)s:%(lineno)d] %(message)s",
     )
-    logging.getLogger("download_manager").setLevel(logging.DEBUG)
+    logging.getLogger("dlmachine").setLevel(logging.DEBUG)
 
 
 def main() -> int:
@@ -61,7 +61,7 @@ def main() -> int:
         )
 
     logger.info("=== FAILURE DEMO END ===")
-    logger.info("Tip: existing _log messages (from pypath/cache_manager) run in parallel.")
+    logger.info("Tip: existing _log messages (from pypath/cachedir) run in parallel.")
     return 0
 
 

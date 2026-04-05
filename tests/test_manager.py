@@ -3,12 +3,12 @@ import os
 from datetime import datetime, timedelta, timezone
 import dateutil
 
-import cache_manager as cm
-from cache_manager._status import Status
-from cache_manager import utils
+import cachedir as cm
+from cachedir._status import Status
+from cachedir import utils
 
-import download_manager as dm
-from download_manager import _constants
+import dlmachine as dm
+from dlmachine import _constants
 
 __all__ = []
 

@@ -1,5 +1,5 @@
 import pytest
-import download_manager as dm
+import dlmachine as dm
 
 
 @pytest.fixture

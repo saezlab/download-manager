@@ -23,7 +23,7 @@ jobs:
     env:
       OS: ${{ matrix.os }}
       PYTHON: ${{ matrix.python }}
-      MODULE: download_manager
+      MODULE: dlmachine
 
     steps:
     - name: Check out main

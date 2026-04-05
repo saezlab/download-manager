@@ -30,8 +30,8 @@ except ImportError:
 import tqdm
 import requests
 
-from cache_manager import _open
-from cache_manager import utils as cmutils
+from cachedir import _open
+from cachedir import utils as cmutils
 from . import _data, _misc, _curlopt, _descriptor
 
 logger = logging.getLogger(__name__)

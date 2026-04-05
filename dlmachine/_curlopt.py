@@ -132,7 +132,7 @@ if __name__ == "__main__":
 
     logger.info(f"Experimenting with module {__name__}")
 
-    from download_manager import _curlopt
+    from dlmachine import _curlopt
 
     value = _curlopt.ensure_int(3.4)
 

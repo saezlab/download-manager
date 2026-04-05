@@ -7,4 +7,4 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 session = _get_session(workspace=".")
-logger.debug('download_manager session initialized')
+logger.debug('dlmachine session initialized')
