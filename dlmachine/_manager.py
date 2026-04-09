@@ -126,11 +126,22 @@ class DownloadManager:
             file instance in the buffer.
         """
 
-        logger.debug(
-            'download called url_type=%s dest=%r kwargs_keys=%s',
-            type(url).__name__,
+        # Log request details including POST body info
+        post_info = ''
+        if kwargs.get('post'):
+            query = kwargs.get('query', {})
+            if kwargs.get('json'):
+                import json as _json
+                body_str = _json.dumps(query)
+                post_info = f' POST(json, {len(body_str)} bytes, keys={sorted(query.keys()) if isinstance(query, dict) else "non-dict"})'
+            else:
+                post_info = f' POST(form, keys={sorted(query.keys()) if isinstance(query, dict) else "non-dict"})'
+
+        logger.info(
+            'download called url=%s dest=%r%s',
+            url if isinstance(url, str) else type(url).__name__,
             dest,
-            sorted(kwargs.keys()),
+            post_info,
         )
         *_, dest = self._download(
             url,
