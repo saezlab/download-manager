@@ -530,11 +530,19 @@ class AbstractDownloader(abc.ABC):
             logger.debug('Computed size from file path=%s size=%s', path, size)
             return size
 
-        else:
+        elif hasattr(self._destination, 'getbuffer'):
 
             size = len(self._destination.getbuffer())
             logger.debug('Computed size from in-memory buffer size=%s', size)
             return size
+
+        else:
+
+            logger.debug(
+                'Could not compute destination size for %r',
+                type(self._destination).__name__,
+            )
+            return None
 
 
     def _log_multipart(self) -> None:
