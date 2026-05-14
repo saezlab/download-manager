@@ -211,19 +211,21 @@ class AbstractDownloader(abc.ABC):
             `True`/`False` depending on the success of the download.
         """
 
-        ok = (
-            self.success and
-            (self.path_exists or self.to_buffer) and
-            not self.is_empty
+        has_destination = (
+            self.path_exists
+            or self.to_buffer
+            or self._downloaded > 0
         )
+        ok = self.success and has_destination and not self.is_empty
 
         logger.debug(
             'Evaluated ok=%s, success=%s, path_exists=%s, to_buffer=%s, '
-            'is_empty=%s',
+            'downloaded=%s, is_empty=%s',
             ok,
             self.success,
             self.path_exists,
             self.to_buffer,
+            self._downloaded,
             self.is_empty,
         )
 
@@ -535,6 +537,11 @@ class AbstractDownloader(abc.ABC):
             size = len(self._destination.getbuffer())
             logger.debug('Computed size from in-memory buffer size=%s', size)
             return size
+
+        elif self._downloaded:
+
+            logger.debug('Using downloaded byte count size=%s', self._downloaded)
+            return self._downloaded
 
         else:
 
